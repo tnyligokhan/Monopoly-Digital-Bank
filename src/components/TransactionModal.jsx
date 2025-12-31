@@ -3,14 +3,22 @@ import { useGameStore } from '../store/gameStore';
 import { X, DollarSign, Users, Building2, Car, Wallet } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+/**
+ * Para transferi işlemlerini yöneten modal bileşeni.
+ * Oyuncular arası, banka ve otopark işlemlerini görsel bir arayüzle sunar.
+ */
 export default function TransactionModal({ game, currentPlayer, onClose, initialConfig }) {
     const { makeTransaction } = useGameStore();
 
+    // State yönetimi
     const [transactionType, setTransactionType] = useState(initialConfig?.type || 'fromBank');
     const [amount, setAmount] = useState('');
     const [selectedPlayer, setSelectedPlayer] = useState(initialConfig?.targetId || '');
     const [loading, setLoading] = useState(false);
 
+    /**
+     * Eğer dışarıdan bir hedef oyuncu veya işlem tipi gelirse state'i güncelle.
+     */
     useEffect(() => {
         if (initialConfig?.targetId) {
             setSelectedPlayer(initialConfig.targetId);
@@ -20,12 +28,15 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
         }
     }, [initialConfig]);
 
+    // İşlem yapılabilecek diğer oyuncuları filtrele (aktif olanlar)
     const otherPlayers = game.players.filter(
         p => p.user_id !== currentPlayer.user_id && p.balance > 0
     );
 
+    /**
+     * Modal başlığını dinamik olarak belirler.
+     */
     let modalTitle = 'Para Transferi';
-
     if (initialConfig) {
         if (transactionType === 'toPlayer') {
             const targetPlayer = game.players.find(p => p.user_id === selectedPlayer);
@@ -41,12 +52,16 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
         }
     }
 
+    /**
+     * Form gönderildiğinde transfer işlemini tetikler.
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
         e.stopPropagation();
 
         const amountNum = parseInt(amount, 10);
 
+        // Form validasyonları
         if (isNaN(amountNum) || amountNum <= 0) {
             toast.error('Geçerli bir miktar girin');
             return;
@@ -65,6 +80,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
         setLoading(true);
         const loadingToast = toast.loading('İşlem yapılıyor...');
 
+        // Alıcı ID belirleme
         const toUserId = transactionType === 'toPlayer' ? selectedPlayer :
             transactionType === 'fromBank' || transactionType === 'fromSalary' || transactionType === 'fromFreeParking'
                 ? currentPlayer.user_id : null;
@@ -97,6 +113,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
 
     const isSimpleMode = !!initialConfig;
 
+    // İşlem tipleri ve ikonları
     const transactionTypes = [
         { value: 'fromBank', label: 'Bankadan Al', icon: Building2, color: 'var(--success)' },
         { value: 'toBank', label: 'Bankaya Öde', icon: Building2, color: 'var(--danger)' },
@@ -129,6 +146,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                    {/* Manuel İşlem Tipi Seçimi */}
                     {!isSimpleMode && (
                         <div className="form-group">
                             <label className="form-label">İşlem Tipi</label>
@@ -141,7 +159,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
                                             type="button"
                                             onClick={() => setTransactionType(type.value)}
                                             className={`type-btn ${transactionType === type.value ? 'active' : ''}`}
-                                            style={transactionType === type.value ? { 
+                                            style={transactionType === type.value ? {
                                                 background: type.color,
                                                 borderColor: type.color,
                                                 color: 'white'
@@ -156,6 +174,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
                         </div>
                     )}
 
+                    {/* Oyuncu Seçimi */}
                     {!isSimpleMode && transactionType === 'toPlayer' && (
                         <div className="form-group">
                             <label className="form-label">Alıcı Oyuncu</label>
@@ -175,6 +194,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
                         </div>
                     )}
 
+                    {/* Miktar Girişi (Bazı işlemlerde otomatik bakiye kullanılır) */}
                     {transactionType !== 'fromSalary' && transactionType !== 'fromFreeParking' && (
                         <div className="form-group">
                             <label className="form-label">Miktar</label>
@@ -193,6 +213,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
                                 />
                             </div>
 
+                            {/* Hızlı Miktar Butonları */}
                             <div className="quick-amount-grid">
                                 {[10, 20, 50, 100, 200, 500].map((val) => (
                                     <button

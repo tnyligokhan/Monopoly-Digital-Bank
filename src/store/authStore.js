@@ -1,16 +1,25 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 
+/**
+ * Kullanıcı kimlik doğrulama ve profil yönetimi için Zustand store.
+ * Uygulama genelinde kullanıcı oturumu ve bilgilerini yönetir.
+ */
 export const useAuthStore = create((set, get) => ({
-    user: null,
-    session: null,
-    loading: true,
+    user: null, // Veritabanındaki kullanıcı profili
+    session: null, // Supabase oturum bilgisi
+    loading: true, // Başlangıç yüklenme durumu
 
+    /**
+     * Uygulama başladığında oturumu kontrol eder ve dinler.
+     */
     initialize: async () => {
         try {
+            // Mevcut oturumu al
             const { data: { session } } = await supabase.auth.getSession();
 
             if (session?.user) {
+                // Oturum varsa kullanıcı bilgilerini veritabanından çek
                 const { data: userData, error } = await supabase
                     .from('users')
                     .select('*')
@@ -26,6 +35,7 @@ export const useAuthStore = create((set, get) => ({
                 set({ user: null, session: null, loading: false });
             }
 
+            // Oturum değişikliklerini dinle (login/logout)
             supabase.auth.onAuthStateChange(async (event, session) => {
                 if (session?.user) {
                     const { data: userData } = await supabase
@@ -45,6 +55,9 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Anonim giriş yapar (Misafir oyuncular için).
+     */
     signInAnonymously: async () => {
         try {
             const { data, error } = await supabase.auth.signInAnonymously();
@@ -58,8 +71,10 @@ export const useAuthStore = create((set, get) => ({
                 throw new Error('Kullanıcı oluşturulamadı');
             }
 
+            // Varsayılan avatar oluştur (DiceBear)
             const avatarUrl = `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${data.user.id}`;
 
+            // Kullanıcı profilini oluştur
             const { error: insertError } = await supabase
                 .from('users')
                 .insert({
@@ -91,6 +106,9 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
+    /**
+     * E-posta ve şifre ile yeni hesap oluşturur.
+     */
     signUpWithEmail: async (email, password, username) => {
         try {
             const { data, error } = await supabase.auth.signUp({
@@ -108,6 +126,7 @@ export const useAuthStore = create((set, get) => ({
             if (data.user) {
                 const avatarUrl = `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${data.user.id}`;
 
+                // Kullanıcı profilini ve kullanıcı adını kaydet
                 const { error: insertError } = await supabase
                     .from('users')
                     .insert({
@@ -123,6 +142,7 @@ export const useAuthStore = create((set, get) => ({
                     throw insertError;
                 }
 
+                // Kullanıcı adını benzersiz olması için usernames tablosuna da kaydet
                 await supabase
                     .from('usernames')
                     .upsert({
@@ -140,6 +160,9 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
+    /**
+     * E-posta ve şifre ile giriş yapar.
+     */
     signInWithEmail: async (email, password) => {
         try {
             const { data, error } = await supabase.auth.signInWithPassword({
@@ -163,6 +186,9 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Oturumu kapatır. Anonim kullanıcı ise bilgilerini temizler.
+     */
     signOut: async () => {
         try {
             const user = get().user;
@@ -170,6 +196,7 @@ export const useAuthStore = create((set, get) => ({
             const { error: signOutError } = await supabase.auth.signOut();
             if (signOutError) throw signOutError;
 
+            // Eğer kullanıcı anonimse, veritabanından profilini de silelim (opsiyonel)
             if (user && user.is_anonymous) {
                 await supabase.from('users').delete().eq('id', user.id);
             }
@@ -182,11 +209,15 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Kullanıcı adını günceller.
+     */
     setUsername: async (username) => {
         try {
             const user = get().user;
             if (!user) throw new Error('Kullanıcı bulunamadı');
 
+            // Eski kullanıcı adını usernames tablosundan sil (opsiyonel veya güncelleme mantığı)
             if (user.name) {
                 await supabase
                     .from('usernames')
@@ -194,6 +225,7 @@ export const useAuthStore = create((set, get) => ({
                     .eq('user_id', user.id);
             }
 
+            // Yeni kullanıcı adını rezerve et
             const { error: usernameError } = await supabase
                 .from('usernames')
                 .upsert({
@@ -205,6 +237,7 @@ export const useAuthStore = create((set, get) => ({
 
             if (usernameError) throw usernameError;
 
+            // Kullanıcı profilini güncelle
             const { data: updatedUser, error } = await supabase
                 .from('users')
                 .update({ name: username })
@@ -222,6 +255,9 @@ export const useAuthStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Kullanıcının o anki aktif oyun ID'sini ayarlar.
+     */
     setCurrentGameId: async (gameId) => {
         try {
             const user = get().user;

@@ -11,15 +11,24 @@ import Avatar from '../components/Avatar';
 import logo from '../assets/logo.svg';
 import logoDark from '../assets/logo-dark.svg';
 
+/**
+ * Uygulamanın ana sayfa bileşeni.
+ * Kullanıcı istatistiklerini gösterir, yeni oyun oluşturma ve katılma işlemlerini yönetir.
+ */
 export default function HomePage() {
+    // Stores ve hooks
     const { user, signOut } = useAuthStore();
     const { getRecentGames, getUserStats } = useGameStore();
     const navigate = useNavigate();
+
+    // UI state yönetimi
     const [showCreateModal, setShowCreateModal] = useState(false);
     const [showJoinModal, setShowJoinModal] = useState(false);
     const [showSidebar, setShowSidebar] = useState(false);
     const [showAboutModal, setShowAboutModal] = useState(false);
     const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
+
+    // Veri state yönetimi
     const [recentGames, setRecentGames] = useState([]);
     const [stats, setStats] = useState({
         totalGames: 0,
@@ -27,6 +36,10 @@ export default function HomePage() {
         totalPlayTime: 0
     });
 
+    /**
+     * Kullanıcı durumu değiştiğinde veya sayfa yüklendiğinde çalışır.
+     * Aktif oyun kontrolü ve istatistik yükleme işlemlerini yapar.
+     */
     useEffect(() => {
         if (user?.current_game_id) {
             navigate(`/game/${user.current_game_id}`);
@@ -37,6 +50,9 @@ export default function HomePage() {
         }
     }, [user, navigate]);
 
+    /**
+     * Son tamamlanan oyunları veritabanından çeker.
+     */
     const loadRecentGames = async () => {
         const result = await getRecentGames(10);
         if (result.success) {
@@ -44,6 +60,9 @@ export default function HomePage() {
         }
     };
 
+    /**
+     * Kullanıcının genel performans istatistiklerini hesaplar.
+     */
     const loadUserStats = async () => {
         const result = await getUserStats(user.id);
         if (result.success) {
@@ -51,6 +70,10 @@ export default function HomePage() {
         }
     };
 
+    /**
+     * Çıkış yapma işlemini yönetir.
+     * Anonim kullanıcılar için onay mekanizması içerir.
+     */
     const handleSignOut = async () => {
         if (user?.is_anonymous) {
             setShowSignOutConfirm(true);
@@ -64,6 +87,9 @@ export default function HomePage() {
         }
     };
 
+    /**
+     * Çıkış işlemini onaylayan yardımcı fonksiyon.
+     */
     const confirmSignOut = async () => {
         setShowSignOutConfirm(false);
         setShowSidebar(false);
@@ -86,6 +112,9 @@ export default function HomePage() {
         setShowAboutModal(true);
     };
 
+    /**
+     * Oyun süresini okunabilir formata çevirir.
+     */
     const formatDuration = (startTime, endTime) => {
         if (!startTime || !endTime) return '0dk';
 
@@ -102,6 +131,9 @@ export default function HomePage() {
         return `${minutes}dk`;
     };
 
+    /**
+     * Toplam oyun süresini formatlar.
+     */
     const formatTotalDuration = (ms) => {
         const hours = Math.floor(ms / 3600000);
         const minutes = Math.floor((ms % 3600000) / 60000);
@@ -114,6 +146,7 @@ export default function HomePage() {
 
     return (
         <div className="home-page">
+            {/* Sidebar ve Overlay */}
             {showSidebar && (
                 <div className="sidebar-overlay" onClick={() => setShowSidebar(false)}></div>
             )}
@@ -154,6 +187,7 @@ export default function HomePage() {
                 </div>
             </div>
 
+            {/* Sayfa Üst Bilgisi */}
             <div className="home-header">
                 <div className="container">
                     <div className="header-content">
@@ -175,11 +209,13 @@ export default function HomePage() {
             <div className="container">
                 <div className="home-content fade-in">
 
+                    {/* Hoşgeldiniz Bölümü */}
                     <div className="welcome-section">
                         <h2 className="welcome-title">Merhaba, {user?.name}! 👋</h2>
                         <p className="welcome-subtitle">Yeni bir oyun başlatın veya mevcut bir oyuna katılın</p>
                     </div>
 
+                    {/* İstatistik Kartları */}
                     <div className="stats-grid">
                         <div className="stat-card">
                             <div className="stat-icon">
@@ -212,6 +248,7 @@ export default function HomePage() {
                         </div>
                     </div>
 
+                    {/* Oyun İşlemleri Butonları */}
                     <div className="game-actions">
                         <button
                             className="btn btn-primary btn-large game-action-btn"
@@ -236,6 +273,7 @@ export default function HomePage() {
                         </button>
                     </div>
 
+                    {/* Son Oyunlar Listesi */}
                     {recentGames && recentGames.length > 0 && (
                         <div className="recent-games">
                             <h2 className="section-title">Son Oyunlar</h2>
@@ -276,6 +314,7 @@ export default function HomePage() {
                 </div>
             </div>
 
+            {/* Modallar */}
             {showCreateModal && (
                 <CreateGameModal onClose={() => setShowCreateModal(false)} />
             )}

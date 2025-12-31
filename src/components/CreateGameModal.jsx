@@ -5,11 +5,16 @@ import { useGameStore } from '../store/gameStore';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+/**
+ * Yeni bir oyun oturumu başlatmak için kullanılan modal.
+ * Başlangıç parası, maaş ve otopark gibi oyun kurallarını belirler.
+ */
 export default function CreateGameModal({ onClose }) {
     const { user } = useAuthStore();
     const { createGame } = useGameStore();
     const navigate = useNavigate();
 
+    // Varsayılan oyun ayarları
     const [settings, setSettings] = useState({
         startingCapital: 1500,
         salary: 200,
@@ -17,6 +22,9 @@ export default function CreateGameModal({ onClose }) {
     });
     const [loading, setLoading] = useState(false);
 
+    /**
+     * Oyun oluşturma işlemini başlatır.
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -26,6 +34,7 @@ export default function CreateGameModal({ onClose }) {
 
         if (result.success) {
             toast.success('Oyun oluşturuldu!');
+            // Oluşturulan oyunun sayfasına yönlendir
             navigate(`/game/${result.gameId}`);
         } else {
             toast.error(result.error || 'Oyun oluşturulamadı');
@@ -43,6 +52,7 @@ export default function CreateGameModal({ onClose }) {
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                    {/* Başlangıç Sermayesi Ayarı */}
                     <div className="form-group">
                         <label className="form-label">Başlangıç Sermayesi</label>
                         <input
@@ -56,6 +66,7 @@ export default function CreateGameModal({ onClose }) {
                         />
                     </div>
 
+                    {/* Maaş Ayarı */}
                     <div className="form-group">
                         <label className="form-label">Maaş (GO Üzerinden Geçiş)</label>
                         <input
@@ -69,6 +80,7 @@ export default function CreateGameModal({ onClose }) {
                         />
                     </div>
 
+                    {/* Otopark Kuralı Ayarı */}
                     <div className="form-group">
                         <label className="flex items-center gap-2" style={{ cursor: 'pointer' }}>
                             <input

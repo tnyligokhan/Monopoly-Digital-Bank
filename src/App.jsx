@@ -10,7 +10,10 @@ import './styles.css';
 
 import { useLocation } from 'react-router-dom';
 
-// Protected Route Component
+/**
+ * Kimlik doğrulaması gerektiren rotalar için koruyucu bileşen.
+ * Kullanıcı giriş yapmamışsa giriş sayfasına yönlendirir.
+ */
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuthStore();
   const location = useLocation();
@@ -27,6 +30,7 @@ function ProtectedRoute({ children }) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
+  // Kullanıcı adı belirlenmemişse zorunlu olarak o sayfaya yönlendir
   if (!user.name || user.name === '') {
     return <Navigate to="/set-username" replace />;
   }
@@ -34,7 +38,10 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// Username Required Route
+/**
+ * Kullanıcı adı belirleme sayfası için koruyucu bileşen.
+ * Sadece giriş yapmış kullanıcıların erişmesini sağlar.
+ */
 function UsernameRoute({ children }) {
   const { user, loading } = useAuthStore();
 
@@ -53,7 +60,9 @@ function UsernameRoute({ children }) {
   return children;
 }
 
-// Public Route (redirect if authenticated)
+/**
+ * Giriş sayfası gibi sadece giriş yapmamış kullanıcıların göreceği rotalar için koruyucu bileşen.
+ */
 function PublicRoute({ children }) {
   const { user, loading } = useAuthStore();
 
@@ -66,6 +75,7 @@ function PublicRoute({ children }) {
   }
 
   if (user && user.id !== '') {
+    // Zaten giriş yapmışsa ana sayfaya (veya kullanıcı adı yoksa oraya) yönlendir
     if (!user.name || user.name === '') {
       return <Navigate to="/set-username" replace />;
     }
@@ -75,15 +85,21 @@ function PublicRoute({ children }) {
   return children;
 }
 
+/**
+ * Uygulamanın ana bileşeni.
+ * Router yapılandırmasını, bildirim sistemini (Toaster) ve oturum başlatmayı yönetir.
+ */
 function App() {
   const { initialize } = useAuthStore();
 
+  // Uygulama başladığında oturumu kontrol et ve dinleyiciyi başlat
   useEffect(() => {
     initialize();
   }, [initialize]);
 
   return (
     <BrowserRouter>
+      {/* Global Bildirim Sistemi (Toast) */}
       <Toaster
         position="top-center"
         toastOptions={{
@@ -109,6 +125,7 @@ function App() {
         }}
       />
 
+      {/* Rota Tanımlamaları */}
       <Routes>
         <Route
           path="/login"
@@ -146,6 +163,7 @@ function App() {
           }
         />
 
+        {/* Bilinmeyen rotaları ana sayfaya yönlendir */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>

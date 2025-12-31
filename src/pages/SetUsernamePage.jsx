@@ -4,6 +4,10 @@ import { useAuthStore } from '../store/authStore';
 import { User } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+/**
+ * Kullanıcı adı belirleme sayfası.
+ * Yeni kayıt olan veya misafir girişi yapan kullanıcıların görünen adını belirlemesini sağlar.
+ */
 export default function SetUsernamePage() {
     const [name, setName] = useState('');
     const [loading, setLoading] = useState(false);
@@ -11,11 +15,16 @@ export default function SetUsernamePage() {
     const navigate = useNavigate();
     const location = useLocation();
 
+    // İşlem sonrası dönülecek sayfa
     const from = location.state?.from?.pathname || '/';
 
+    /**
+     * Kullanıcı adını kaydeder ve ana sayfaya yönlendirir.
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Validasyonlar
         if (!name.trim()) {
             toast.error('Lütfen adınızı girin');
             return;

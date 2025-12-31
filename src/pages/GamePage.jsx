@@ -10,22 +10,32 @@ import GameEndModal from '../components/GameEndModal';
 import { formatDisplayName } from '../utils/formatName';
 import Avatar from '../components/Avatar';
 
+/**
+ * Oyunun ana ekranı. Realtime güncellemeleri, bakiye yönetimini,
+ * transfer işlemlerini ve oyun akışını yönetir.
+ */
 export default function GamePage() {
     const { gameId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuthStore();
     const { currentGame, subscribeToGame, leaveGame, startGame, joinGame, cleanup, makeTransaction } = useGameStore();
 
+    // UI States
     const [modalConfig, setModalConfig] = useState(null);
     const [showGameEndModal, setShowGameEndModal] = useState(false);
     const [hasTriedJoining, setHasTriedJoining] = useState(false);
 
+    /**
+     * Sayfa yüklendiğinde oyun kanalına abone olur.
+     * Sayfadan ayrıldığında kanaldan ayrılır.
+     */
     useEffect(() => {
         let isMounted = true;
 
         if (gameId) {
             subscribeToGame(gameId);
 
+            // 5 saniye içinde oyun verisi gelmezse hata ver ve geri dön
             const timeout = setTimeout(() => {
                 if (isMounted && !useGameStore.getState().currentGame) {
                     toast.error('Oyun bulunamadı veya bağlantı hatası');
@@ -41,6 +51,9 @@ export default function GamePage() {
         }
     }, [gameId]);
 
+    /**
+     * Kullanıcı oyuna henüz dahil değilse otomatik katılma işlemi yapar.
+     */
     useEffect(() => {
         if (currentGame && user && !currentGame.starting_timestamp && !hasTriedJoining) {
             const isPlayer = currentGame.players.some(p => p.user_id === user.id);
@@ -50,23 +63,25 @@ export default function GamePage() {
                     if (result.success) {
                         toast.success('Oyuna giriş yapıldı');
                     } else {
-                        if (result.error !== 'Oyun zaten başlamış' && result.error !== 'Oyun dolu (maksimum 6 oyuncu)') {
-                            toast.error(result.error);
-                        } else {
-                            toast.error(result.error);
-                        }
+                        toast.error(result.error);
                     }
                 });
             }
         }
     }, [currentGame, user, gameId, hasTriedJoining]);
 
+    /**
+     * Kazanan belirlendiğinde oyun sonu modalını açar.
+     */
     useEffect(() => {
         if (currentGame?.winner_id && !showGameEndModal) {
             setShowGameEndModal(true);
         }
     }, [currentGame?.winner_id]);
 
+    /**
+     * Oyundan ayrılma işlemi.
+     */
     const handleLeaveGame = async () => {
         if (confirm('Oyundan ayrılmak istediğinize emin misiniz?')) {
             const result = await leaveGame(user.id);
@@ -76,6 +91,9 @@ export default function GamePage() {
         }
     };
 
+    /**
+     * Oyunu kurucu tarafından resmen başlatır.
+     */
     const handleStartGame = async () => {
         const result = await startGame(gameId);
         if (result.success) {
@@ -85,6 +103,9 @@ export default function GamePage() {
         }
     };
 
+    /**
+     * Oyun linkini veya kodunu paylaşır.
+     */
     const handleShare = async () => {
         const gameUrl = `${window.location.origin}/game/${gameId}`;
 
@@ -104,9 +125,10 @@ export default function GamePage() {
         }
     };
 
+    /**
+     * İşlem modalını açar veya hızlı maaş ödemesini yapar.
+     */
     const openTransactionModal = (type, targetId = null) => {
-        console.log('openTransactionModal called with:', type, targetId);
-
         if (type === 'fromSalary') {
             const loadingToast = toast.loading('Maaş yatırılıyor...');
             makeTransaction({
@@ -116,7 +138,6 @@ export default function GamePage() {
                 toUserId: user.id
             }).then((res) => {
                 toast.dismiss(loadingToast);
-                console.log('Salary transaction result:', res);
                 if (res.success) toast.success('Maaş alındı!');
                 else toast.error(`Hata: ${res.error || 'İşlem başarısız'}`);
             });
@@ -126,6 +147,7 @@ export default function GamePage() {
         setModalConfig({ type, targetId });
     };
 
+    // Yükleniyor durumu
     if (!currentGame) {
         return (
             <div className="game-page">
@@ -139,6 +161,7 @@ export default function GamePage() {
     const isCreator = currentGame.players.find(p => p.user_id === user.id)?.is_game_creator;
     const hasStarted = currentGame.starting_timestamp !== null;
 
+    // Lobi / Bekleme Ekranı
     if (!hasStarted || currentGame.players.length < 2) {
         return (
             <div className="game-page">
@@ -174,7 +197,6 @@ export default function GamePage() {
         );
     }
 
-    const sortedPlayers = [...currentGame.players].sort((a, b) => b.balance - a.balance);
     const otherPlayers = currentGame.players.filter(p => p.user_id !== user.id);
     const currentPlayer = currentGame.players.find(p => p.user_id === user.id);
 
@@ -188,33 +210,18 @@ export default function GamePage() {
                 <button className="icon-btn" onClick={handleLeaveGame}><LogOut size={24} /></button>
             </header>
 
+            {/* Bakiye Gösterimi */}
             <div className="balance-section">
                 <h1 className="main-balance" style={currentPlayer?.balance <= 0 ? { color: 'var(--danger)' } : {}}>
                     ${currentPlayer?.balance?.toLocaleString()}
                 </h1>
                 {currentPlayer?.balance <= 0 && (
-                    <div style={{
-                        fontSize: '0.875rem',
-                        color: 'var(--danger)',
-                        marginTop: 'var(--spacing-sm)',
-                        fontWeight: 600
-                    }}>
-                        💸 İflas ettiniz
-                    </div>
-                )}
-                {currentGame?.winner_id && (
-                    <div style={{
-                        fontSize: '0.875rem',
-                        color: 'var(--text-secondary)',
-                        marginTop: 'var(--spacing-sm)',
-                        fontWeight: 500
-                    }}>
-                        Diğer tüm oyuncular iflas etti.
-                    </div>
+                    <div className="bankrupt-badge">💸 İflas ettiniz</div>
                 )}
             </div>
 
             <div className="scrollable-content">
+                {/* Ödeme Bölümü */}
                 <div className="section-header">
                     <span>ÖDE</span>
                     <Upload size={16} />
@@ -238,9 +245,7 @@ export default function GamePage() {
                                 <div>
                                     <span className="player-name">{formatDisplayName(player.name)}</span>
                                     {player.bankrupt_timestamp && (
-                                        <div style={{ fontSize: '0.75rem', color: 'var(--danger)', marginTop: '2px' }}>
-                                            💸 Bankrupt
-                                        </div>
+                                        <div className="bankrupt-status">💸 Bankrupt</div>
                                     )}
                                 </div>
                             </div>
@@ -265,6 +270,7 @@ export default function GamePage() {
                     )}
                 </div>
 
+                {/* Alma Bölümü */}
                 <div className="section-header mt-4">
                     <span>AL</span>
                     <Download size={16} />
@@ -287,6 +293,7 @@ export default function GamePage() {
                     )}
                 </div>
 
+                {/* İşlem Geçmişi */}
                 <div className="section-header mt-4">
                     <span>GEÇMİŞ</span>
                     <Clock size={16} />
@@ -376,6 +383,7 @@ export default function GamePage() {
                 </div>
             </div>
 
+            {/* Modallar */}
             {modalConfig && (
                 <TransactionModal
                     game={currentGame}

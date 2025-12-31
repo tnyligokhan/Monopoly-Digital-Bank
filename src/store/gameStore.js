@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
+import { useAuthStore } from './authStore';
 
+// Oyuncu renk paleti
 const PLAYER_COLORS = [
     '#2196F3', // Mavi
     '#009688', // Teal
@@ -12,12 +14,19 @@ const PLAYER_COLORS = [
 
 const MAX_PLAYERS = 6;
 
+/**
+ * Oyun mantığı ve durumu (state) yönetimi için Zustand store.
+ * Oyun oluşturma, katılma, para transferleri ve gerçek zamanlı güncellemeleri yönetir.
+ */
 export const useGameStore = create((set, get) => ({
-    currentGame: null,
-    games: [],
-    loading: false,
-    realtimeChannel: null,
+    currentGame: null,      // Aktif oyun verisi
+    games: [],              // (Kullanılmıyor olabilir, genel oyun listesi için)
+    loading: false,          // İşlem yüklenme durumu
+    realtimeChannel: null,  // Supabase realtime kanal referansı
 
+    /**
+     * Rastgele 4 haneli benzersiz oyun ID'si üretir.
+     */
     generateGameId: () => {
         const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
         let result = '';
@@ -27,19 +36,23 @@ export const useGameStore = create((set, get) => ({
         return result;
     },
 
+    /**
+     * Yeni bir oyun oluşturur ve kurucuyu oyuna dahil eder.
+     */
     createGame: async (settings, userId) => {
         try {
             set({ loading: true });
 
             let gameId = get().generateGameId();
 
+            // Benzersiz bir ID bulana kadar döngü (çakışma kontrolü)
             let exists = true;
             while (exists) {
                 const { data } = await supabase
                     .from('games')
                     .select('id')
                     .eq('id', gameId)
-                    .single();
+                    .maybeSingle();
 
                 if (!data) {
                     exists = false;
@@ -48,6 +61,7 @@ export const useGameStore = create((set, get) => ({
                 }
             }
 
+            // Oyun kaydını oluştur
             const { error } = await supabase
                 .from('games')
                 .insert({
@@ -66,6 +80,7 @@ export const useGameStore = create((set, get) => ({
 
             if (error) throw error;
 
+            // Kurucuyu otomatik olarak oyuna dahil et
             await get().joinGame(gameId, userId, true);
 
             set({ loading: false });
@@ -77,10 +92,14 @@ export const useGameStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Var olan bir oyuna katılır.
+     */
     joinGame: async (gameId, userId, isCreator = false) => {
         try {
             set({ loading: true });
 
+            // Oyun verilerini getir
             const { data: game, error: gameError } = await supabase
                 .from('games')
                 .select('*')
@@ -92,6 +111,7 @@ export const useGameStore = create((set, get) => ({
                 return { success: false, error: 'Oyun bulunamadı' };
             }
 
+            // Kullanıcı verilerini getir
             const { data: user } = await supabase
                 .from('users')
                 .select('*')
@@ -103,18 +123,23 @@ export const useGameStore = create((set, get) => ({
                 return { success: false, error: 'Kullanıcı bulunamadı' };
             }
 
+            // Oyuncu zaten oyunda mı?
             const playerExists = game.players.some(p => p.user_id === userId);
 
             if (!playerExists) {
+                // Oyun başlamış mı?
                 if (game.starting_timestamp) {
                     set({ loading: false });
                     return { success: false, error: 'Oyun zaten başlamış' };
                 }
 
+                // Kapasite kontrolü
                 if (game.players.length >= MAX_PLAYERS) {
                     set({ loading: false });
                     return { success: false, error: 'Oyun dolu (maksimum 6 oyuncu)' };
                 }
+
+                // Yeni oyuncu objesi
                 const newPlayer = {
                     user_id: userId,
                     name: user.name,
@@ -126,6 +151,7 @@ export const useGameStore = create((set, get) => ({
 
                 const updatedPlayers = [...game.players, newPlayer];
 
+                // Veritabanını güncelle
                 const { error: updateError } = await supabase
                     .from('games')
                     .update({ players: updatedPlayers })
@@ -134,11 +160,18 @@ export const useGameStore = create((set, get) => ({
                 if (updateError) throw updateError;
             }
 
-            await supabase
-                .from('users')
-                .update({ current_game_id: gameId.toUpperCase() })
-                .eq('id', userId);
+            // Kullanıcının aktif oyun ID'sini güncelle
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser && currentUser.id === userId) {
+                await useAuthStore.getState().setCurrentGameId(gameId.toUpperCase());
+            } else {
+                await supabase
+                    .from('users')
+                    .update({ current_game_id: gameId.toUpperCase() })
+                    .eq('id', userId);
+            }
 
+            // Realtime dinleyiciye abone ol
             get().subscribeToGame(gameId.toUpperCase());
 
             set({ loading: false });
@@ -150,11 +183,15 @@ export const useGameStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Supabase Realtime ile oyun güncellemelerini canlı olarak dinler.
+     */
     subscribeToGame: (gameId) => {
         const currentChannel = get().realtimeChannel;
         if (currentChannel) {
             supabase.removeChannel(currentChannel);
         }
+
         const channel = supabase
             .channel(`game:${gameId}`)
             .on(
@@ -177,6 +214,7 @@ export const useGameStore = create((set, get) => ({
 
         set({ realtimeChannel: channel });
 
+        // İlk veriyi çek
         supabase
             .from('games')
             .select('*')
@@ -189,6 +227,9 @@ export const useGameStore = create((set, get) => ({
             });
     },
 
+    /**
+     * Mevcut oyunu terk eder.
+     */
     leaveGame: async (userId) => {
         try {
             const currentGame = get().currentGame;
@@ -197,9 +238,11 @@ export const useGameStore = create((set, get) => ({
             const player = currentGame.players.find(p => p.user_id === userId);
             if (!player) return { success: true };
 
+            // Son oyuncu ise veya oyun bitmediyse para işlemleri yapılır
             if (currentGame.players.length === 1) {
                 await supabase.from('games').delete().eq('id', currentGame.id);
             } else if (!currentGame.winner_id && !player.bankrupt_timestamp) {
+                // Çıkan oyuncunun parası bankaya döner
                 await get().makeTransaction({
                     gameId: currentGame.id,
                     type: 'toBank',
@@ -208,11 +251,18 @@ export const useGameStore = create((set, get) => ({
                 });
             }
 
-            await supabase
-                .from('users')
-                .update({ current_game_id: null })
-                .eq('id', userId);
+            // Kullanıcı profilindeki oyun ID'sini temizle
+            const currentUser = useAuthStore.getState().user;
+            if (currentUser && currentUser.id === userId) {
+                await useAuthStore.getState().setCurrentGameId(null);
+            } else {
+                await supabase
+                    .from('users')
+                    .update({ current_game_id: null })
+                    .eq('id', userId);
+            }
 
+            // Kanaldan ayrıl
             const channel = get().realtimeChannel;
             if (channel) {
                 supabase.removeChannel(channel);
@@ -226,6 +276,9 @@ export const useGameStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Oyunu resmen başlatır.
+     */
     startGame: async (gameId) => {
         try {
             const { error } = await supabase
@@ -241,8 +294,11 @@ export const useGameStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Para transfer işlemlerini gerçekleştirir.
+     * Banka, Ücretsiz Otopark ve Oyuncular arası transferleri yönetir.
+     */
     makeTransaction: async ({ gameId, type, amount, fromUserId = null, toUserId = null }) => {
-        console.log('makeTransaction started:', { gameId, type, amount, fromUserId, toUserId });
         try {
             const { data: game, error: fetchError } = await supabase
                 .from('games')
@@ -251,7 +307,6 @@ export const useGameStore = create((set, get) => ({
                 .single();
 
             if (fetchError || !game) {
-                console.error('Fetch game error:', fetchError);
                 throw new Error('Oyun bulunamadı');
             }
 
@@ -259,8 +314,9 @@ export const useGameStore = create((set, get) => ({
             let updatedPlayers = [...game.players];
             let updatedFreeParkingMoney = game.free_parking_money;
 
+            // İşlem tipine göre bakiyeleri güncelle
             switch (type) {
-                case 'fromBank':
+                case 'fromBank': // Bankadan oyuncuya
                     if (!toUserId) throw new Error('Alıcı belirtilmedi');
                     updatedPlayers = updatedPlayers.map(p =>
                         p.user_id === toUserId
@@ -269,7 +325,7 @@ export const useGameStore = create((set, get) => ({
                     );
                     break;
 
-                case 'toBank':
+                case 'toBank': // Oyuncudan bankaya
                     if (!fromUserId) throw new Error('Gönderen belirtilmedi');
                     updatedPlayers = updatedPlayers.map(p =>
                         p.user_id === fromUserId
@@ -278,7 +334,7 @@ export const useGameStore = create((set, get) => ({
                     );
                     break;
 
-                case 'toPlayer':
+                case 'toPlayer': // Oyuncudan oyuncuya
                     if (!fromUserId || !toUserId) throw new Error('Gönderen veya alıcı belirtilmedi');
                     updatedPlayers = updatedPlayers.map(p => {
                         if (p.user_id === fromUserId) {
@@ -290,7 +346,7 @@ export const useGameStore = create((set, get) => ({
                     });
                     break;
 
-                case 'toFreeParking':
+                case 'toFreeParking': // Oyuncudan Ücretsiz Otopark'a
                     if (!fromUserId) throw new Error('Gönderen belirtilmedi');
                     updatedPlayers = updatedPlayers.map(p =>
                         p.user_id === fromUserId
@@ -300,7 +356,7 @@ export const useGameStore = create((set, get) => ({
                     updatedFreeParkingMoney += amount;
                     break;
 
-                case 'fromFreeParking':
+                case 'fromFreeParking': // Ücretsiz Otopark'tan oyuncuya
                     if (!toUserId) throw new Error('Alıcı belirtilmedi');
                     updatedPlayers = updatedPlayers.map(p =>
                         p.user_id === toUserId
@@ -310,7 +366,7 @@ export const useGameStore = create((set, get) => ({
                     updatedFreeParkingMoney = 0;
                     break;
 
-                case 'fromSalary':
+                case 'fromSalary': // Maaş ödemesi
                     if (!toUserId) throw new Error('Alıcı belirtilmedi');
                     updatedPlayers = updatedPlayers.map(p =>
                         p.user_id === toUserId
@@ -323,6 +379,7 @@ export const useGameStore = create((set, get) => ({
                     throw new Error('Geçersiz işlem tipi');
             }
 
+            // İflas kontrolü
             updatedPlayers = updatedPlayers.map(p => {
                 if (p.balance <= 0 && !p.bankrupt_timestamp) {
                     return { ...p, bankrupt_timestamp: timestamp };
@@ -330,6 +387,7 @@ export const useGameStore = create((set, get) => ({
                 return p;
             });
 
+            // İşlem geçmişine ekle
             const transaction = {
                 from_user_id: fromUserId || null,
                 to_user_id: toUserId || null,
@@ -340,7 +398,8 @@ export const useGameStore = create((set, get) => ({
 
             const updatedHistory = [transaction, ...(game.transaction_history || [])];
 
-            const nonBankruptPlayers = updatedPlayers.filter(p => p.balance > 0);
+            // Kazanan kontrolü
+            const nonBankruptPlayers = updatedPlayers.filter(p => !p.bankrupt_timestamp);
             let winnerId = game.winner_id;
             let endingTimestamp = game.ending_timestamp;
 
@@ -349,12 +408,7 @@ export const useGameStore = create((set, get) => ({
                 endingTimestamp = timestamp;
             }
 
-            console.log('Updating game with:', {
-                playersCount: updatedPlayers.length,
-                historyCount: updatedHistory.length,
-                freeParking: updatedFreeParkingMoney
-            });
-
+            // Veritabanını komple güncelle
             const { error: updateError } = await supabase
                 .from('games')
                 .update({
@@ -366,12 +420,8 @@ export const useGameStore = create((set, get) => ({
                 })
                 .eq('id', gameId);
 
-            if (updateError) {
-                console.error('Supabase update error:', updateError);
-                throw updateError;
-            }
+            if (updateError) throw updateError;
 
-            console.log('Transaction completed successfully');
             return { success: true };
         } catch (error) {
             console.error('Make transaction error:', error);
@@ -379,6 +429,9 @@ export const useGameStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Store temizliği yapar ve realtime bağlantısını keser.
+     */
     cleanup: () => {
         const channel = get().realtimeChannel;
         if (channel) {
@@ -387,6 +440,9 @@ export const useGameStore = create((set, get) => ({
         set({ currentGame: null, realtimeChannel: null });
     },
 
+    /**
+     * Bitmiş son oyunları getirir.
+     */
     getRecentGames: async (limit = 10) => {
         try {
             const { data, error } = await supabase
@@ -405,6 +461,9 @@ export const useGameStore = create((set, get) => ({
         }
     },
 
+    /**
+     * Kullanıcının genel istatistiklerini hesaplar.
+     */
     getUserStats: async (userId) => {
         try {
             const { data, error } = await supabase
@@ -421,6 +480,7 @@ export const useGameStore = create((set, get) => ({
             const totalGames = userGames.length;
             const wonGames = userGames.filter(game => game.winner_id === userId).length;
 
+            // Toplam oyun süresi
             const totalPlayTime = userGames.reduce((total, game) => {
                 if (game.starting_timestamp && game.ending_timestamp) {
                     const start = new Date(game.starting_timestamp);
@@ -443,11 +503,7 @@ export const useGameStore = create((set, get) => ({
             return {
                 success: false,
                 error: error.message,
-                stats: {
-                    totalGames: 0,
-                    wonGames: 0,
-                    totalPlayTime: 0
-                }
+                stats: { totalGames: 0, wonGames: 0, totalPlayTime: 0 }
             };
         }
     }

@@ -5,6 +5,9 @@ import { useGameStore } from '../store/gameStore';
 import { X } from 'lucide-react';
 import toast from 'react-hot-toast';
 
+/**
+ * Mevcut bir oyuna 4 haneli kod ile katılmayı sağlayan modal.
+ */
 export default function JoinGameModal({ onClose }) {
     const { user } = useAuthStore();
     const { joinGame } = useGameStore();
@@ -13,9 +16,13 @@ export default function JoinGameModal({ onClose }) {
     const [gameId, setGameId] = useState('');
     const [loading, setLoading] = useState(false);
 
+    /**
+     * Kod ile oyuna katılma işlemini başlatır.
+     */
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        // Validasyon
         if (!gameId.trim()) {
             toast.error('Lütfen oyun kodunu girin');
             return;
@@ -27,6 +34,7 @@ export default function JoinGameModal({ onClose }) {
 
         if (result.success) {
             toast.success('Oyuna katıldınız!');
+            // Katılınan oyunun sayfasına yönlendir
             navigate(`/game/${gameId.toUpperCase()}`);
         } else {
             toast.error(result.error || 'Oyuna katılınamadı');
@@ -44,6 +52,7 @@ export default function JoinGameModal({ onClose }) {
                 </div>
 
                 <form onSubmit={handleSubmit}>
+                    {/* Oyun Kodu Girişi */}
                     <div className="form-group">
                         <label className="form-label">Oyun Kodu</label>
                         <input
@@ -53,11 +62,11 @@ export default function JoinGameModal({ onClose }) {
                             value={gameId}
                             onChange={(e) => setGameId(e.target.value.toUpperCase())}
                             maxLength={4}
-                            style={{ 
-                                textAlign: 'center', 
-                                fontSize: '1.5rem', 
-                                fontWeight: '600', 
-                                letterSpacing: '0.25em' 
+                            style={{
+                                textAlign: 'center',
+                                fontSize: '1.5rem',
+                                fontWeight: '600',
+                                letterSpacing: '0.25em'
                             }}
                             autoFocus
                             required

@@ -6,24 +6,38 @@ import toast from 'react-hot-toast';
 import logo from '../assets/logo.svg';
 import logoDark from '../assets/logo-dark.svg';
 
+/**
+ * Giriş ve Kayıt sayfası.
+ * Anonim giriş, e-posta/şifre ile giriş ve kayıt işlemlerini yönetir.
+ */
 export default function LoginPage() {
+    // UI State yönetimi
     const [loading, setLoading] = useState(false);
     const [isSignUp, setIsSignUp] = useState(false);
+
+    // Form State yönetimi
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [firstName, setFirstName] = useState('');
     const [lastName, setLastName] = useState('');
+
+    // Stores ve hooks
     const { signInAnonymously, signInWithEmail, signUpWithEmail } = useAuthStore();
     const navigate = useNavigate();
     const location = useLocation();
 
+    // Giriş yapıldıktan sonra yönlendirilecek sayfa (varsayılan: ana sayfa)
     const from = location.state?.from?.pathname || '/';
 
+    /**
+     * Misafir oyuncu olarak hızlı giriş yapar.
+     */
     const handleAnonymousSignIn = async () => {
         setLoading(true);
         const result = await signInAnonymously();
 
         if (result.success) {
+            // Küçük bir gecikme ile kullanıcı adı belirleme sayfasına yönlendir
             await new Promise(resolve => setTimeout(resolve, 100));
             navigate('/set-username', { state: { from: location.state?.from } });
         } else {
@@ -33,9 +47,13 @@ export default function LoginPage() {
         setLoading(false);
     };
 
+    /**
+     * E-posta ve şifre ile giriş veya kayıt işlemini yönetir.
+     */
     const handleEmailAuth = async (e) => {
         e.preventDefault();
 
+        // Validasyonlar
         if (!email || !password) {
             toast.error('Lütfen tüm alanları doldurun');
             return;
@@ -54,6 +72,7 @@ export default function LoginPage() {
         setLoading(true);
 
         if (isSignUp) {
+            // Kayıt olma işlemi
             const fullName = `${firstName.trim()} ${lastName.trim()}`;
             const result = await signUpWithEmail(email, password, fullName);
             setLoading(false);
@@ -61,6 +80,7 @@ export default function LoginPage() {
             if (result.success) {
                 toast.success('Kayıt başarılı! Email adresinizi kontrol edin.');
                 setIsSignUp(false);
+                // Formu temizle
                 setEmail('');
                 setPassword('');
                 setFirstName('');
@@ -69,6 +89,7 @@ export default function LoginPage() {
                 toast.error(result.error || 'Kayıt olunamadı');
             }
         } else {
+            // Giriş yapma işlemi
             const result = await signInWithEmail(email, password);
             setLoading(false);
 
@@ -93,6 +114,7 @@ export default function LoginPage() {
                 </p>
 
                 <form onSubmit={handleEmailAuth} className="login-buttons">
+                    {/* Kayıt Modu Alanları */}
                     {isSignUp && (
                         <>
                             <div className="form-group">
@@ -124,6 +146,7 @@ export default function LoginPage() {
                         </>
                     )}
 
+                    {/* Ortak Alanlar */}
                     <div className="form-group">
                         <div className="input-with-icon">
                             <Mail size={20} className="input-icon" />
@@ -167,6 +190,7 @@ export default function LoginPage() {
                         )}
                     </button>
 
+                    {/* Mod Değiştirme Butonu */}
                     <button
                         type="button"
                         className="btn btn-ghost btn-large"
@@ -186,6 +210,7 @@ export default function LoginPage() {
                         <span>veya</span>
                     </div>
 
+                    {/* Misafir Girişi */}
                     <button
                         type="button"
                         className="btn btn-outline btn-large"
@@ -197,13 +222,13 @@ export default function LoginPage() {
                     </button>
                 </form>
 
-                <p className="login-footer">
+                <div className="login-footer">
                     {isSignUp ? (
-                        '📧 Kayıt olduktan sonra email adresinize onay linki gönderilecektir'
+                        <p>📧 Kayıt olduktan sonra email adresinize onay linki gönderilecektir</p>
                     ) : (
-                        '⚠️ Misafir girişte istatistikleriniz sadece bu cihazda saklanır'
+                        <p>⚠️ Misafir girişte istatistikleriniz sadece bu cihazda saklanır</p>
                     )}
-                </p>
+                </div>
             </div>
         </div>
     );
