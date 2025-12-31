@@ -430,6 +430,53 @@ export const useGameStore = create((set, get) => ({
     },
 
     /**
+     * Oyun kurucunun bir oyuncuyu oyundan atmasını sağlar.
+     */
+    kickPlayer: async (gameId, targetUserId) => {
+        try {
+            const currentGame = get().currentGame;
+            if (!currentGame) return { success: false, error: 'Oyun bulunamadı' };
+
+            const player = currentGame.players.find(p => p.user_id === targetUserId);
+            if (!player) return { success: true };
+
+            // Atılan oyuncunun parası bankaya döner
+            if (!player.bankrupt_timestamp) {
+                await get().makeTransaction({
+                    gameId: gameId,
+                    type: 'toBank',
+                    amount: player.balance,
+                    fromUserId: targetUserId
+                });
+            }
+
+            // Players listesini güncelle (yeniden çekiyoruz ki transaction sonrası güncel olsun)
+            const { data: updatedGame } = await supabase
+                .from('games')
+                .select('players')
+                .eq('id', gameId)
+                .single();
+
+            if (updatedGame) {
+                const updatedPlayers = updatedGame.players.filter(p => p.user_id !== targetUserId);
+
+                // Veritabanını güncelle
+                const { error: updateError } = await supabase
+                    .from('games')
+                    .update({ players: updatedPlayers })
+                    .eq('id', gameId);
+
+                if (updateError) throw updateError;
+            }
+
+            return { success: true };
+        } catch (error) {
+            console.error('Kick player error:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
      * Store temizliği yapar ve realtime bağlantısını keser.
      */
     cleanup: () => {

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useGameStore } from '../store/gameStore';
-import { LogOut, Share2, Upload, Download, Building2, Wallet, Car, User, Clock, ArrowLeft } from 'lucide-react';
+import { LogOut, Share2, Upload, Download, Building2, Wallet, Car, User, Clock, ArrowLeft, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import TransactionModal from '../components/TransactionModal';
@@ -18,7 +18,7 @@ export default function GamePage() {
     const { gameId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { currentGame, subscribeToGame, leaveGame, startGame, joinGame, cleanup, makeTransaction } = useGameStore();
+    const { currentGame, subscribeToGame, leaveGame, startGame, joinGame, cleanup, makeTransaction, kickPlayer } = useGameStore();
 
     // UI States
     const [modalConfig, setModalConfig] = useState(null);
@@ -66,6 +66,16 @@ export default function GamePage() {
                         toast.error(result.error);
                     }
                 });
+            }
+        } else if (currentGame && user && hasTriedJoining) {
+            // Eğer daha önce katılmayı denediysek (veya katıldıysak) ve şu an listede yoksak -> Atıldık
+            const isPlayer = currentGame.players.some(p => p.user_id === user.id);
+            if (!isPlayer) {
+                // Temizlik yap ve anasayfaya yönlendir
+                cleanup();
+                useAuthStore.getState().setCurrentGameId(null);
+                toast.error('Oyundan atıldınız!');
+                navigate('/');
             }
         }
     }, [currentGame, user, gameId, hasTriedJoining]);
@@ -147,6 +157,20 @@ export default function GamePage() {
         setModalConfig({ type, targetId });
     };
 
+    /**
+     * Oyuncu atma işlemi
+     */
+    const handleKickPlayer = async (targetId, targetName) => {
+        if (window.confirm(`${targetName} adlı oyuncuyu oyundan atmak istediğinize emin misiniz?`)) {
+            const result = await kickPlayer(gameId, targetId);
+            if (result.success) {
+                toast.success(`${targetName} oyundan atıldı`);
+            } else {
+                toast.error(`Hata: ${result.error}`);
+            }
+        }
+    };
+
     // Yükleniyor durumu
     if (!currentGame) {
         return (
@@ -180,6 +204,16 @@ export default function GamePage() {
                                         size={40}
                                     />
                                     <span className="player-name">{player.name}</span>
+                                    {isCreator && player.user_id !== user.id && (
+                                        <button
+                                            className="icon-btn"
+                                            onClick={() => handleKickPlayer(player.user_id, player.name)}
+                                            style={{ marginLeft: 'auto', color: 'var(--danger)', padding: '4px' }}
+                                            title="Oyundan At"
+                                        >
+                                            <Trash2 size={20} />
+                                        </button>
+                                    )}
                                 </div>
                             ))}
                         </div>
@@ -229,30 +263,63 @@ export default function GamePage() {
 
                 <div className="action-list">
                     {otherPlayers.map(player => (
-                        <button
-                            key={player.user_id}
-                            className="action-item"
-                            onClick={() => openTransactionModal('toPlayer', player.user_id)}
-                            disabled={player.bankrupt_timestamp !== null}
-                            style={player.bankrupt_timestamp ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
-                        >
-                            <div className="player-info">
-                                <Avatar
-                                    user={{ id: player.user_id, name: player.name, photo_url: player.photo_url }}
-                                    size={40}
-                                    showBorder={true}
-                                />
-                                <div>
-                                    <span className="player-name">{formatDisplayName(player.name)}</span>
-                                    {player.bankrupt_timestamp && (
-                                        <div className="bankrupt-status">💸 Bankrupt</div>
-                                    )}
+                        <div key={player.user_id} style={{ position: 'relative', marginBottom: '8px' }}>
+                            <button
+                                className="action-item"
+                                onClick={() => openTransactionModal('toPlayer', player.user_id)}
+                                disabled={player.bankrupt_timestamp !== null}
+                                style={{
+                                    width: '100%',
+                                    marginBottom: 0,
+                                    ...(player.bankrupt_timestamp ? { opacity: 0.5, cursor: 'not-allowed' } : {})
+                                }}
+                            >
+                                <div className="player-info">
+                                    <Avatar
+                                        user={{ id: player.user_id, name: player.name, photo_url: player.photo_url }}
+                                        size={40}
+                                        showBorder={true}
+                                    />
+                                    <div>
+                                        <span className="player-name">{formatDisplayName(player.name)}</span>
+                                        {player.bankrupt_timestamp && (
+                                            <div className="bankrupt-status">💸 Bankrupt</div>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                            <span className="player-balance" style={player.bankrupt_timestamp ? { color: 'var(--danger)' } : {}}>
-                                ${player.balance.toLocaleString()}
-                            </span>
-                        </button>
+                                <span className="player-balance" style={player.bankrupt_timestamp ? { color: 'var(--danger)' } : {}}>
+                                    ${player.balance.toLocaleString()}
+                                </span>
+                            </button>
+                            {isCreator && (
+                                <button
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleKickPlayer(player.user_id, player.name);
+                                    }}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '-10px',
+                                        top: '-10px',
+                                        background: 'var(--danger)',
+                                        color: 'white',
+                                        border: 'none',
+                                        borderRadius: '50%',
+                                        width: '24px',
+                                        height: '24px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        zIndex: 10,
+                                        boxShadow: '0 2px 4px rgba(0,0,0,0.2)'
+                                    }}
+                                    title="Oyundan At"
+                                >
+                                    <Trash2 size={14} />
+                                </button>
+                            )}
+                        </div>
                     ))}
                     <button className="action-item" onClick={() => openTransactionModal('toBank')}>
                         <div className="player-info">
