@@ -14,21 +14,57 @@ export default function GamePage() {
     const { gameId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { currentGame, subscribeToGame, leaveGame, startGame, cleanup, makeTransaction } = useGameStore();
+    const { currentGame, subscribeToGame, leaveGame, startGame, joinGame, cleanup, makeTransaction } = useGameStore();
 
     // Sadece modalConfig state'i yeterli
     const [modalConfig, setModalConfig] = useState(null);
     const [showGameEndModal, setShowGameEndModal] = useState(false);
+    const [hasTriedJoining, setHasTriedJoining] = useState(false);
 
     useEffect(() => {
+        let isMounted = true;
+        
         if (gameId) {
             subscribeToGame(gameId);
-        }
+            
+            // Eğer 5 saniye içinde oyun yüklenmezse (geçersiz ID durumu)
+            const timeout = setTimeout(() => {
+                if (isMounted && !useGameStore.getState().currentGame) {
+                    toast.error('Oyun bulunamadı veya bağlantı hatası');
+                    navigate('/');
+                }
+            }, 5000);
 
-        return () => {
-            cleanup();
-        };
-    }, [gameId]); // Removed problematic dependencies
+            return () => {
+                clearTimeout(timeout);
+                isMounted = false;
+                cleanup();
+            };
+        }
+    }, [gameId]);
+
+    // Otomatik katılım
+    useEffect(() => {
+        if (currentGame && user && !currentGame.starting_timestamp && !hasTriedJoining) {
+            const isPlayer = currentGame.players.some(p => p.user_id === user.id);
+            if (!isPlayer) {
+                setHasTriedJoining(true);
+                joinGame(gameId, user.id).then(result => {
+                    if (result.success) {
+                        toast.success('Oyuna giriş yapıldı');
+                    } else {
+                        // Sadece önemli hataları göster
+                        if (result.error !== 'Oyun zaten başlamış' && result.error !== 'Oyun dolu (maksimum 6 oyuncu)') {
+                            toast.error(result.error);
+                        } else {
+                            // Oyun dolu veya başlamışsa da kullanıcıya bilgi ver
+                            toast.error(result.error);
+                        }
+                    }
+                });
+            }
+        }
+    }, [currentGame, user, gameId, hasTriedJoining]);
 
     // Oyun bitişi kontrolü
     useEffect(() => {
@@ -125,9 +161,9 @@ export default function GamePage() {
                             <h3 className="mb-3">Oyuncular ({currentGame.players.length})</h3>
                             {currentGame.players.map((player, index) => (
                                 <div key={index} className="player-item">
-                                    <Avatar 
-                                        user={{ id: player.user_id, name: player.name, photo_url: player.photo_url }} 
-                                        size={40} 
+                                    <Avatar
+                                        user={{ id: player.user_id, name: player.name, photo_url: player.photo_url }}
+                                        size={40}
                                     />
                                     <span className="player-name">{player.name}</span>
                                 </div>
@@ -166,21 +202,21 @@ export default function GamePage() {
                     ${currentPlayer?.balance?.toLocaleString()}
                 </h1>
                 {currentPlayer?.balance <= 0 && (
-                    <div style={{ 
-                        fontSize: '0.875rem', 
-                        color: 'var(--danger)', 
+                    <div style={{
+                        fontSize: '0.875rem',
+                        color: 'var(--danger)',
                         marginTop: 'var(--spacing-sm)',
-                        fontWeight: 600 
+                        fontWeight: 600
                     }}>
                         💸 İflas ettiniz
                     </div>
                 )}
                 {currentGame?.winner_id && (
-                    <div style={{ 
-                        fontSize: '0.875rem', 
-                        color: 'var(--text-secondary)', 
+                    <div style={{
+                        fontSize: '0.875rem',
+                        color: 'var(--text-secondary)',
                         marginTop: 'var(--spacing-sm)',
-                        fontWeight: 500 
+                        fontWeight: 500
                     }}>
                         Diğer tüm oyuncular iflas etti.
                     </div>
@@ -195,17 +231,17 @@ export default function GamePage() {
 
                 <div className="action-list">
                     {otherPlayers.map(player => (
-                        <button 
-                            key={player.user_id} 
-                            className="action-item" 
+                        <button
+                            key={player.user_id}
+                            className="action-item"
                             onClick={() => openTransactionModal('toPlayer', player.user_id)}
                             disabled={player.bankrupt_timestamp !== null}
                             style={player.bankrupt_timestamp ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
                         >
                             <div className="player-info">
-                                <Avatar 
-                                    user={{ id: player.user_id, name: player.name, photo_url: player.photo_url }} 
-                                    size={40} 
+                                <Avatar
+                                    user={{ id: player.user_id, name: player.name, photo_url: player.photo_url }}
+                                    size={40}
                                     showBorder={true}
                                 />
                                 <div>

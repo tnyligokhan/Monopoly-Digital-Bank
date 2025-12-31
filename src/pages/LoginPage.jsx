@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { LogIn, Mail, Lock, User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -13,6 +13,9 @@ export default function LoginPage() {
     const [lastName, setLastName] = useState('');
     const { signInAnonymously, signInWithEmail, signUpWithEmail } = useAuthStore();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const from = location.state?.from?.pathname || '/';
 
     const handleAnonymousSignIn = async () => {
         setLoading(true);
@@ -21,7 +24,7 @@ export default function LoginPage() {
         if (result.success) {
             // State güncellemesini bekle
             await new Promise(resolve => setTimeout(resolve, 100));
-            navigate('/set-username');
+            navigate('/set-username', { state: { from: location.state?.from } });
         } else {
             toast.error(result.error || 'Giriş yapılamadı');
         }
@@ -69,7 +72,7 @@ export default function LoginPage() {
             setLoading(false);
 
             if (result.success) {
-                navigate('/');
+                navigate(from);
             } else {
                 toast.error(result.error || 'Giriş yapılamadı');
             }

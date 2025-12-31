@@ -8,9 +8,12 @@ import HomePage from './pages/HomePage';
 import GamePage from './pages/GamePage';
 import './styles.css';
 
+import { useLocation } from 'react-router-dom';
+
 // Protected Route Component
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuthStore();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -21,7 +24,7 @@ function ProtectedRoute({ children }) {
   }
 
   if (!user || user.id === '') {
-    return <Navigate to="/login" replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
   if (!user.name || user.name === '') {

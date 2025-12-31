@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { User } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -9,6 +9,9 @@ export default function SetUsernamePage() {
     const [loading, setLoading] = useState(false);
     const { setUsername: updateUsername, user } = useAuthStore();
     const navigate = useNavigate();
+    const location = useLocation();
+
+    const from = location.state?.from?.pathname || '/';
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -34,7 +37,7 @@ export default function SetUsernamePage() {
 
         if (result.success) {
             toast.success('Hoş geldiniz!');
-            navigate('/');
+            navigate(from);
         } else {
             toast.error(result.error || 'Ad ayarlanamadı');
         }
