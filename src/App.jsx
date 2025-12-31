@@ -123,6 +123,10 @@ function App() {
             },
           },
         }}
+        containerStyle={{
+          top: 20,
+        }}
+        limit={3}
       />
 
       {/* Rota Tanımlamaları */}

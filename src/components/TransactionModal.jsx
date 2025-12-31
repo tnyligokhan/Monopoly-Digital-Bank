@@ -63,12 +63,12 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
 
         // Form validasyonları
         if (isNaN(amountNum) || amountNum <= 0) {
-            toast.error('Geçerli bir miktar girin');
+            toast.error('Geçerli bir miktar girin', { id: 'tx-invalid-amount' });
             return;
         }
 
         if ((transactionType === 'toBank' || transactionType === 'toPlayer' || transactionType === 'toFreeParking') && amountNum > currentPlayer.balance) {
-            toast.error('Yetersiz bakiye');
+            toast.error('Yetersiz bakiye', { id: 'tx-insufficient-funds' });
             return;
         }
 
@@ -99,7 +99,7 @@ export default function TransactionModal({ game, currentPlayer, onClose, initial
             toast.dismiss(loadingToast);
 
             if (result.success) {
-                toast.success('İşlem başarılı!');
+                toast.success('İşlem başarılı!', { id: 'tx-success' });
                 onClose();
             } else {
                 toast.error(`Hata: ${result.error || 'Bilinmeyen hata'}`);

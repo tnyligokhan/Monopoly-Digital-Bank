@@ -83,7 +83,7 @@ export default function HomePage() {
         if (result.success) {
             navigate('/login');
         } else {
-            toast.error('Çıkış yapılamadı');
+            toast.error('Çıkış yapılamadı', { id: 'signout-error' });
         }
     };
 
@@ -98,7 +98,7 @@ export default function HomePage() {
         if (result.success) {
             navigate('/login');
         } else {
-            toast.error('Çıkış yapılamadı');
+            toast.error('Çıkış yapılamadı', { id: 'signout-error' });
         }
     };
 

@@ -55,7 +55,7 @@ export default function LoginPage() {
 
         // Validasyonlar
         if (!email || !password) {
-            toast.error('Lütfen tüm alanları doldurun');
+            toast.error('Lütfen tüm alanları doldurun', { id: 'login-missing-fields' });
             return;
         }
 
@@ -78,7 +78,7 @@ export default function LoginPage() {
             setLoading(false);
 
             if (result.success) {
-                toast.success('Kayıt başarılı! Email adresinizi kontrol edin.');
+                toast.success('Kayıt başarılı! Email adresinizi kontrol edin.', { id: 'signup-success' });
                 setIsSignUp(false);
                 // Formu temizle
                 setEmail('');
@@ -96,7 +96,7 @@ export default function LoginPage() {
             if (result.success) {
                 navigate(from);
             } else {
-                toast.error(result.error || 'Giriş yapılamadı');
+                toast.error(result.error || 'Giriş yapılamadı', { id: 'login-error' });
             }
         }
     };

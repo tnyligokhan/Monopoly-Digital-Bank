@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useGameStore } from '../store/gameStore';
@@ -47,6 +47,8 @@ export default function GamePage() {
             return () => {
                 clearTimeout(timeout);
                 isMounted = false;
+                // Sayfadan çıkarken oyunla ilgili tüm bildirimleri temizle
+                toast.dismiss();
                 cleanup();
             };
         }
@@ -70,12 +72,15 @@ export default function GamePage() {
             }
         } else if (currentGame && user && hasTriedJoining) {
             // Eğer daha önce katılmayı denediysek (veya katıldıysak) ve şu an listede yoksak -> Atıldık
+            // Bu kontrolün sürekli tekrarlanmaması için ref veya state kontrolü yapabiliriz ama
+            // cleanup sonrası currentGame null olacağı için döngü kırılacaktır.
+            // Yine de ID vererek garantiye alalım.
             const isPlayer = currentGame.players.some(p => p.user_id === user.id);
             if (!isPlayer) {
                 // Temizlik yap ve anasayfaya yönlendir
                 cleanup();
                 useAuthStore.getState().setCurrentGameId(null);
-                toast.error('Oyundan atıldınız!');
+                toast.error('Oyundan atıldınız!', { id: 'kicked-toast' });
                 navigate('/');
             }
         }
@@ -88,7 +93,7 @@ export default function GamePage() {
         if (currentGame) {
             setGameLoaded(true);
         } else if (gameLoaded && !currentGame) {
-            toast.error('Oyun kurucu tarafından sonlandırıldı');
+            toast.error('Oyun kurucu tarafından sonlandırıldı', { id: 'game-ended-toast' });
             navigate('/');
         }
     }, [currentGame, gameLoaded]);
@@ -101,6 +106,62 @@ export default function GamePage() {
             setShowGameEndModal(true);
         }
     }, [currentGame?.winner_id]);
+
+    /**
+     * Gelen işlemleri takip eder ve sadece yeni olanlar için bildirim gösterir.
+     * Sayfa yenilendiğinde eski bildirimlerin tekrar gösterilmesini engeller.
+     */
+    const lastProcessedTxRef = useRef(null);
+
+    useEffect(() => {
+        // Oyun veya işlem geçmişi henüz yoksa çık
+        if (!currentGame?.transaction_history) return;
+
+        // İlk yükleme (mount) anında:
+        // Geçmişteki işlemleri "yeni" olarak algılamamak için son işlemin zamanını işaretle.
+        if (lastProcessedTxRef.current === null) {
+            if (currentGame.transaction_history.length > 0) {
+                // En yeni işlem [0] indeksindedir (gameStore yapısına göre)
+                lastProcessedTxRef.current = currentGame.transaction_history[0].timestamp;
+            } else {
+                // Hiç işlem yoksa şu anı işaretle
+                lastProcessedTxRef.current = new Date().toISOString();
+            }
+            return;
+        }
+
+        // Yeni işlemleri tespit et
+        const newTransactions = [];
+        // En yeni işlemden geriye doğru git, son işleneni bulana kadar
+        for (const tx of currentGame.transaction_history) {
+            // Eğer bu işlemin zamanı son işlenene eşit veya küçükse dur (daha eskidir veya aynısıdır)
+            if (tx.timestamp <= lastProcessedTxRef.current) break;
+
+            newTransactions.push(tx);
+        }
+
+        // Eğer yeni işlem varsa
+        if (newTransactions.length > 0) {
+            // İşaretçiyi en yeni işlemin zamanına güncelle
+            lastProcessedTxRef.current = newTransactions[0].timestamp;
+
+            // Her yeni işlemi kullanıcıya bildir (sadece gelen para vs.)
+            // Ters çeviriyoruz ki kronolojik sırayla (eskiden yeniye) bildirim düşsün
+            [...newTransactions].reverse().forEach(tx => {
+                // Sadece BANA gelen paralar için bildirim göster
+                if (tx.to_user_id === user.id && tx.from_user_id !== user.id) {
+                    const fromPlayer = currentGame.players.find(p => p.user_id === tx.from_user_id);
+                    const fromName = fromPlayer ? formatDisplayName(fromPlayer.name) : 'Bilinmeyen';
+
+                    // Benzersiz ID ile toast oluştur ki react-hot-toast aynısını basmasın
+                    toast.success(`${fromName} size $${tx.amount.toLocaleString()} gönderdi!`, {
+                        id: `tx-${tx.timestamp}`,
+                        duration: 5000
+                    });
+                }
+            });
+        }
+    }, [currentGame?.transaction_history, user.id]);
 
     /**
      * Oyundan ayrılma işlemi.
