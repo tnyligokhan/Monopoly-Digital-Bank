@@ -69,7 +69,16 @@ npm run dev
 
 ## 📸 Ekran Görüntüleri
 
-_(Buraya uygulamanın ekran görüntülerini ekleyebilirsiniz)_
+<p align="center">
+  <img src="assets/screenshots/1.jpeg" width="30%" alt="Ekran Görüntüsü 1">
+  <img src="assets/screenshots/2.jpeg" width="30%" alt="Ekran Görüntüsü 2">
+  <img src="assets/screenshots/3.jpeg" width="30%" alt="Ekran Görüntüsü 3">
+</p>
+<p align="center">
+  <img src="assets/screenshots/4.jpeg" width="30%" alt="Ekran Görüntüsü 4">
+  <img src="assets/screenshots/5.jpeg" width="30%" alt="Ekran Görüntüsü 5">
+  <img src="assets/screenshots/6.jpeg" width="30%" alt="Ekran Görüntüsü 6">
+</p>
 
 ## 🤝 Katkıda Bulunma
 

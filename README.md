@@ -69,7 +69,16 @@ npm run dev
 
 ## 📸 Screenshots
 
-_(You can add screenshots of the application here)_
+<p align="center">
+  <img src="assets/screenshots/1.jpeg" width="30%" alt="Screenshot 1">
+  <img src="assets/screenshots/2.jpeg" width="30%" alt="Screenshot 2">
+  <img src="assets/screenshots/3.jpeg" width="30%" alt="Screenshot 3">
+</p>
+<p align="center">
+  <img src="assets/screenshots/4.jpeg" width="30%" alt="Screenshot 4">
+  <img src="assets/screenshots/5.jpeg" width="30%" alt="Screenshot 5">
+  <img src="assets/screenshots/6.jpeg" width="30%" alt="Screenshot 6">
+</p>
 
 ## 🤝 Contribution
 
