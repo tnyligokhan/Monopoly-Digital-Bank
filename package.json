@@ -1,6 +1,7 @@
 {
   "name": "monopoly-digital-bank",
-  "private": true,
+  "private": false,
+  "license": "MIT",
   "version": "1.0.1",
   "type": "module",
   "scripts": {

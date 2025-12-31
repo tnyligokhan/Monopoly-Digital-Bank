@@ -87,21 +87,36 @@ CREATE POLICY "Kullanıcılar kendi kullanıcı adlarını silebilir"
 -- Games tablosu
 ALTER TABLE games ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Kimlik doğrulaması yapanlar oyunları okuyabilir"
-  ON games FOR SELECT
-  USING (auth.uid() IS NOT NULL);
+-- Games tablosu
+ALTER TABLE games ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Kimlik doğrulaması yapanlar oyun oluşturabilir"
+CREATE POLICY "Kullanıcılar dahil oldukları veya lobi aşamasındaki oyunları okuyabilir"
+  ON games FOR SELECT
+  USING (
+    auth.uid() IS NOT NULL AND (
+      players @> jsonb_build_array(jsonb_build_object('user_id', auth.uid()))
+      OR starting_timestamp IS NULL
+    )
+  );
+
+CREATE POLICY "Kullanıcılar lobi oluşturabilir"
   ON games FOR INSERT
   WITH CHECK (auth.uid() IS NOT NULL);
 
-CREATE POLICY "Kimlik doğrulaması yapanlar oyunları güncelleyebilir"
+CREATE POLICY "Kullanıcılar dahil oldukları oyunları güncelleyebilir"
   ON games FOR UPDATE
-  USING (auth.uid() IS NOT NULL);
+  USING (
+    auth.uid() IS NOT NULL AND (
+      players @> jsonb_build_array(jsonb_build_object('user_id', auth.uid()))
+      OR starting_timestamp IS NULL
+    )
+  );
 
-CREATE POLICY "Kimlik doğrulaması yapanlar oyunları silebilir"
+CREATE POLICY "Sadece oyun kurucusu oyunu silebilir"
   ON games FOR DELETE
-  USING (auth.uid() IS NOT NULL);
+  USING (
+    players @> jsonb_build_array(jsonb_build_object('user_id', auth.uid(), 'is_game_creator', true))
+  );
 
 -- Trigger'lar (updated_at otomatik güncelleme)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
