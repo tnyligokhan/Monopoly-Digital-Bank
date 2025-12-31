@@ -14,7 +14,7 @@ export default function AboutModal({ onClose }) {
                 <div className="about-content">
                     <div className="about-hero">
                         <h1 className="about-app-title">Monopoly Digital Bank</h1>
-                        <div className="about-version">Versiyon 1.2.0</div>
+                        <div className="about-version">Versiyon 1.2.1</div>
                     </div>
 
                     <div className="about-developer">

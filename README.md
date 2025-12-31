@@ -4,7 +4,7 @@
 
 > **Monopoly Digital Bank** (formerly Monopoly Mobile Banking) is a modern, real-time **digital banking** application developed for the Monopoly board game. Forget paper money, manage your transactions from your pocket with the **Monopoly Mobile Banking** experience!
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue.svg?style=flat&logo=git)
+![Version](https://img.shields.io/badge/version-1.2.1-blue.svg?style=flat&logo=git)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)
 ![React](https://img.shields.io/badge/React-19-61dafb.svg?style=flat&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-Build-646CFF?style=flat&logo=vite&logoColor=white)

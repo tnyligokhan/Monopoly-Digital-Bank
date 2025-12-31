@@ -4,7 +4,7 @@
 
 > **Monopoly Digital Bank** (eski adıyla Monopoly Mobile Banking), Monopoly masa oyunları için geliştirilmiş, gerçek zamanlı ve modern bir **dijital bankacılık** uygulamasıdır. Kağıt paraları unutun, **Monopoly Mobil Bankacılık** deneyimiyle işlemlerinizi cebinizden yönetin!
 
-![Version](https://img.shields.io/badge/version-1.2.0-blue.svg?style=flat&logo=git)
+![Version](https://img.shields.io/badge/version-1.2.1-blue.svg?style=flat&logo=git)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)
 ![React](https://img.shields.io/badge/React-19-61dafb.svg?style=flat&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-Build-646CFF?style=flat&logo=vite&logoColor=white)
