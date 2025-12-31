@@ -5,33 +5,38 @@
 
 /* CSS Variables - Design Tokens */
 :root {
-  /* Colors - Edge Light Mode Style */
-  --primary: #0f0f0f;
-  --primary-hover: #2b2b2b;
-  --primary-light: #3d3d3d;
-  
+  /* Colors - Monopoly Brand Style */
+  --primary: #F63919;
+  --primary-hover: #d63316;
+  --primary-light: #fa7a61;
+
+  /* FIXED Button Colors - Always Red/White independent of theme */
+  --btn-primary-bg: #F63919;
+  --btn-primary-text: #ffffff;
+  --btn-primary-hover: #d63316;
+
   --success: #107c10;
   --success-hover: #0e6b0e;
   --warning: #ca5010;
   --danger: #d13438;
-  --info: #0078d4;
-  
+  --info: #155487;
+
   --background: #f3f3f3;
   --surface: #ffffff;
   --surface-hover: #f9f9f9;
-  
-  --text-primary: #242424;
-  --text-secondary: #605e5c;
+
+  --text-primary: #155487;
+  --text-secondary: #4a6a8a;
   --text-tertiary: #8a8886;
-  
-  --border: #edebe9;
-  --border-hover: #d2d0ce;
-  
-  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.08);
-  --shadow-lg: 0 4px 8px 0 rgba(0, 0, 0, 0.12);
-  --shadow-xl: 0 8px 16px 0 rgba(0, 0, 0, 0.14);
-  
+
+  --border: #cad5de;
+  --border-hover: #155487;
+
+  --shadow-sm: 0 1px 2px 0 rgba(21, 84, 135, 0.1);
+  --shadow: 0 2px 4px 0 rgba(21, 84, 135, 0.15);
+  --shadow-lg: 0 4px 8px 0 rgba(21, 84, 135, 0.2);
+  --shadow-xl: 0 8px 16px 0 rgba(21, 84, 135, 0.25);
+
   /* Spacing */
   --spacing-xs: 0.25rem;
   --spacing-sm: 0.5rem;
@@ -39,42 +44,42 @@
   --spacing-lg: 1.5rem;
   --spacing-xl: 2rem;
   --spacing-2xl: 3rem;
-  
+
   /* Border Radius - Minimal */
   --radius-sm: 0.25rem;
   --radius-md: 0.375rem;
   --radius-lg: 0.5rem;
   --radius-xl: 0.75rem;
   --radius-full: 9999px;
-  
+
   /* Transitions */
   --transition: all 0.15s ease;
 }
 
-/* Dark Mode - Edge Style */
+/* Dark Mode - Brand Optimized */
 @media (prefers-color-scheme: dark) {
   :root {
-    --primary: #ffffff;
-    --primary-hover: #e1e1e1;
-    --primary-light: #c7c7c7;
-    
+    --primary: #F63919;
+    --primary-hover: #ff5c3e;
+    --primary-light: #ff856e;
+
     --success: #6bb700;
     --success-hover: #5da300;
     --warning: #ff8c00;
     --danger: #e81123;
     --info: #4cc2ff;
-    
-    --background: #1f1f1f;
-    --surface: #2b2b2b;
-    --surface-hover: #3d3d3d;
-    
+
+    --background: #0d1b2a;
+    --surface: #1b263b;
+    --surface-hover: #293548;
+
     --text-primary: #ffffff;
-    --text-secondary: #c8c6c4;
-    --text-tertiary: #8a8886;
-    
-    --border: #3d3d3d;
-    --border-hover: #4f4f4f;
-    
+    --text-secondary: #a0aec0;
+    --text-tertiary: #718096;
+
+    --border: #2d3748;
+    --border-hover: #4a5568;
+
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
     --shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 4px 8px 0 rgba(0, 0, 0, 0.6);
@@ -139,10 +144,21 @@ body {
   justify-content: space-between;
 }
 
-.gap-1 { gap: var(--spacing-xs); }
-.gap-2 { gap: var(--spacing-sm); }
-.gap-3 { gap: var(--spacing-md); }
-.gap-4 { gap: var(--spacing-lg); }
+.gap-1 {
+  gap: var(--spacing-xs);
+}
+
+.gap-2 {
+  gap: var(--spacing-sm);
+}
+
+.gap-3 {
+  gap: var(--spacing-md);
+}
+
+.gap-4 {
+  gap: var(--spacing-lg);
+}
 
 .text-center {
   text-align: center;
@@ -180,17 +196,45 @@ body {
   color: var(--danger);
 }
 
-.mt-1 { margin-top: var(--spacing-xs); }
-.mt-2 { margin-top: var(--spacing-sm); }
-.mt-3 { margin-top: var(--spacing-md); }
-.mt-4 { margin-top: var(--spacing-lg); }
-.mt-6 { margin-top: var(--spacing-xl); }
+.mt-1 {
+  margin-top: var(--spacing-xs);
+}
 
-.mb-1 { margin-bottom: var(--spacing-xs); }
-.mb-2 { margin-bottom: var(--spacing-sm); }
-.mb-3 { margin-bottom: var(--spacing-md); }
-.mb-4 { margin-bottom: var(--spacing-lg); }
-.mb-6 { margin-bottom: var(--spacing-xl); }
+.mt-2 {
+  margin-top: var(--spacing-sm);
+}
+
+.mt-3 {
+  margin-top: var(--spacing-md);
+}
+
+.mt-4 {
+  margin-top: var(--spacing-lg);
+}
+
+.mt-6 {
+  margin-top: var(--spacing-xl);
+}
+
+.mb-1 {
+  margin-bottom: var(--spacing-xs);
+}
+
+.mb-2 {
+  margin-bottom: var(--spacing-sm);
+}
+
+.mb-3 {
+  margin-bottom: var(--spacing-md);
+}
+
+.mb-4 {
+  margin-bottom: var(--spacing-lg);
+}
+
+.mb-6 {
+  margin-bottom: var(--spacing-xl);
+}
 
 .flex-1 {
   flex: 1;
@@ -205,6 +249,7 @@ body {
     opacity: 0;
     transform: translateY(10px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -222,6 +267,7 @@ body {
     opacity: 0;
     transform: translateY(20px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -273,14 +319,14 @@ body {
 }
 
 .btn-primary {
-  background: var(--primary);
-  color: var(--background);
-  border: 1px solid var(--primary);
+  background: var(--btn-primary-bg);
+  color: var(--btn-primary-text);
+  border: 1px solid var(--btn-primary-bg);
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: var(--primary-hover);
-  border-color: var(--primary-hover);
+  background: var(--btn-primary-hover);
+  border-color: var(--btn-primary-hover);
 }
 
 .btn-secondary {
@@ -518,31 +564,59 @@ input[type="checkbox"] {
   width: 100%;
 }
 
+/* ... existing code ... */
 .login-logo {
   display: flex;
   justify-content: center;
-  margin-bottom: var(--spacing-2xl);
+  margin-bottom: var(--spacing-xl);
+  padding: 0 var(--spacing-lg);
 }
 
-.logo-circle {
-  width: 80px;
-  height: 80px;
-  border-radius: var(--radius-md);
-  background: var(--primary);
+.app-logo {
+  max-width: 100%;
+  height: auto;
+  max-height: 100px;
+  /* Limit height */
+  object-fit: contain;
+}
+
+.header-logo-container {
   display: flex;
   align-items: center;
-  justify-content: center;
-  box-shadow: var(--shadow);
-  border: 1px solid var(--border);
 }
 
-.logo-text {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: var(--background);
+.header-logo {
+  height: 32px;
+  width: auto;
+  object-fit: contain;
 }
+
+/* Logo Theme Switching */
+/* Default (Light Mode) */
+.light-mode-logo {
+  display: block;
+}
+
+.dark-mode-logo {
+  display: none;
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .light-mode-logo {
+    display: none;
+  }
+
+  .dark-mode-logo {
+    display: block;
+  }
+}
+
+/* ... Clean up old classes if you wish, or leave them for safety ... */
+/* .logo-circle, .logo-text, .logo-small styles can be removed or ignored */
 
 .login-title {
+  /* ... */
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);
@@ -1491,9 +1565,12 @@ input[type="checkbox"] {
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
@@ -1756,6 +1833,7 @@ input[type="checkbox"] {
 }
 
 @media (max-width: 480px) {
+
   .login-page,
   .username-page {
     padding: var(--spacing-md);
@@ -1780,6 +1858,7 @@ input[type="checkbox"] {
    ============================================ */
 
 @media print {
+
   .btn,
   .modal-overlay,
   .home-header,

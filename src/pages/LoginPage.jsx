@@ -3,6 +3,8 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { LogIn, Mail, Lock, User as UserIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
+import logo from '../assets/logo.svg';
+import logoDark from '../assets/logo-dark.svg';
 
 export default function LoginPage() {
     const [loading, setLoading] = useState(false);
@@ -83,12 +85,10 @@ export default function LoginPage() {
         <div className="login-page">
             <div className="login-container fade-in">
                 <div className="login-logo">
-                    <div className="logo-circle">
-                        <span className="logo-text">M</span>
-                    </div>
+                    <img src={logo} alt="Monopoly Digital Bank" className="app-logo light-mode-logo" />
+                    <img src={logoDark} alt="Monopoly Digital Bank" className="app-logo dark-mode-logo" />
                 </div>
 
-                <h1 className="login-title">Monopoly Digital Bank</h1>
                 <p className="login-subtitle">
                     {isSignUp ? 'Hesap oluştur ve harcamalarını yönet' : 'Monopoly oyununda dijital bankacılık deneyimi'}
                 </p>

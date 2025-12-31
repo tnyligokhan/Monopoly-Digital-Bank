@@ -8,6 +8,8 @@ import CreateGameModal from '../components/CreateGameModal';
 import JoinGameModal from '../components/JoinGameModal';
 import AboutModal from '../components/AboutModal';
 import Avatar from '../components/Avatar';
+import logo from '../assets/logo.svg';
+import logoDark from '../assets/logo-dark.svg';
 
 export default function HomePage() {
     const { user, signOut } = useAuthStore();
@@ -71,7 +73,7 @@ export default function HomePage() {
     const confirmSignOut = async () => {
         setShowSignOutConfirm(false);
         setShowSidebar(false);
-        
+
         const result = await signOut();
         if (result.success) {
             navigate('/login');
@@ -92,14 +94,14 @@ export default function HomePage() {
 
     const formatDuration = (startTime, endTime) => {
         if (!startTime || !endTime) return '0dk';
-        
+
         const start = new Date(startTime);
         const end = new Date(endTime);
         const diffMs = end - start;
-        
+
         const hours = Math.floor(diffMs / 3600000);
         const minutes = Math.floor((diffMs % 3600000) / 60000);
-        
+
         if (hours > 0) {
             return `${hours}sa ${minutes}dk`;
         }
@@ -109,7 +111,7 @@ export default function HomePage() {
     const formatTotalDuration = (ms) => {
         const hours = Math.floor(ms / 3600000);
         const minutes = Math.floor((ms % 3600000) / 60000);
-        
+
         if (hours > 0) {
             return `${hours}sa ${minutes}dk`;
         }
@@ -164,8 +166,10 @@ export default function HomePage() {
                 <div className="container">
                     <div className="header-content">
                         <div className="header-left">
-                            <div className="logo-small">M</div>
-                            <h1 className="header-title">Monopoly Digital Bank</h1>
+                            <div className="header-logo-container">
+                                <img src={logo} alt="Monopoly" className="header-logo light-mode-logo" />
+                                <img src={logoDark} alt="Monopoly" className="header-logo dark-mode-logo" />
+                            </div>
                         </div>
                         <div className="header-right">
                             <button className="menu-btn" onClick={() => setShowSidebar(true)}>
@@ -250,7 +254,7 @@ export default function HomePage() {
                                     const winner = game.players.find(p => p.user_id === game.winner_id);
                                     const playerNames = game.players.map(p => p.name).join(', ');
                                     const duration = formatDuration(game.starting_timestamp, game.ending_timestamp);
-                                    
+
                                     return (
                                         <div key={game.id} className="game-card">
                                             <div className="game-card-header">
