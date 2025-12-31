@@ -16,18 +16,16 @@ export default function GamePage() {
     const { user } = useAuthStore();
     const { currentGame, subscribeToGame, leaveGame, startGame, joinGame, cleanup, makeTransaction } = useGameStore();
 
-    // Sadece modalConfig state'i yeterli
     const [modalConfig, setModalConfig] = useState(null);
     const [showGameEndModal, setShowGameEndModal] = useState(false);
     const [hasTriedJoining, setHasTriedJoining] = useState(false);
 
     useEffect(() => {
         let isMounted = true;
-        
+
         if (gameId) {
             subscribeToGame(gameId);
-            
-            // Eğer 5 saniye içinde oyun yüklenmezse (geçersiz ID durumu)
+
             const timeout = setTimeout(() => {
                 if (isMounted && !useGameStore.getState().currentGame) {
                     toast.error('Oyun bulunamadı veya bağlantı hatası');
@@ -43,7 +41,6 @@ export default function GamePage() {
         }
     }, [gameId]);
 
-    // Otomatik katılım
     useEffect(() => {
         if (currentGame && user && !currentGame.starting_timestamp && !hasTriedJoining) {
             const isPlayer = currentGame.players.some(p => p.user_id === user.id);
@@ -53,11 +50,9 @@ export default function GamePage() {
                     if (result.success) {
                         toast.success('Oyuna giriş yapıldı');
                     } else {
-                        // Sadece önemli hataları göster
                         if (result.error !== 'Oyun zaten başlamış' && result.error !== 'Oyun dolu (maksimum 6 oyuncu)') {
                             toast.error(result.error);
                         } else {
-                            // Oyun dolu veya başlamışsa da kullanıcıya bilgi ver
                             toast.error(result.error);
                         }
                     }
@@ -66,7 +61,6 @@ export default function GamePage() {
         }
     }, [currentGame, user, gameId, hasTriedJoining]);
 
-    // Oyun bitişi kontrolü
     useEffect(() => {
         if (currentGame?.winner_id && !showGameEndModal) {
             setShowGameEndModal(true);
@@ -113,7 +107,6 @@ export default function GamePage() {
     const openTransactionModal = (type, targetId = null) => {
         console.log('openTransactionModal called with:', type, targetId);
 
-        // Maaş ise direkt işlem yap
         if (type === 'fromSalary') {
             const loadingToast = toast.loading('Maaş yatırılıyor...');
             makeTransaction({
@@ -130,7 +123,6 @@ export default function GamePage() {
             return;
         }
 
-        // Diğer işlemler için modal aç (state'i güncelle)
         setModalConfig({ type, targetId });
     };
 
@@ -147,7 +139,6 @@ export default function GamePage() {
     const isCreator = currentGame.players.find(p => p.user_id === user.id)?.is_game_creator;
     const hasStarted = currentGame.starting_timestamp !== null;
 
-    // Lobi Ekranı
     if (!hasStarted || currentGame.players.length < 2) {
         return (
             <div className="game-page">
@@ -303,24 +294,20 @@ export default function GamePage() {
 
                 <div className="history-list">
                     {currentGame.transaction_history?.slice(0, 50).map((tx, index) => {
-                        // Oyuncuları bul
                         const fromPlayer = currentGame.players.find(p => p.user_id === tx.from_user_id);
                         const toPlayer = currentGame.players.find(p => p.user_id === tx.to_user_id);
 
-                        // İsimleri belirle (Eğer oyuncu bulunamazsa 'Bilinmeyen' yaz)
                         const fromName = fromPlayer ? formatDisplayName(fromPlayer.name) : 'Bilinmeyen';
                         const toName = toPlayer ? formatDisplayName(toPlayer.name) : 'Bilinmeyen';
 
-                        // Ben miyim kontrolü (Renklendirme için)
                         const isMyTransaction = tx.from_user_id === user.id || tx.to_user_id === user.id;
                         const isIncoming = tx.to_user_id === user.id;
                         const isOutgoing = tx.from_user_id === user.id;
 
                         let message = '';
                         let icon = <Clock size={16} color="#90A4AE" />;
-                        let amountClass = 'text-secondary'; // Varsayılan nötr renk
+                        let amountClass = 'text-secondary';
 
-                        // İşlem tipine göre mesaj ve ikon belirle
                         switch (tx.type) {
                             case 'fromSalary':
                                 message = `${toName} maaş aldı`;
@@ -363,7 +350,6 @@ export default function GamePage() {
                                 message = 'Bilinmeyen işlem';
                         }
 
-                        // Tutar gösterimi (Eğer ben isem +/-, değilse sadece miktar)
                         let amountPrefix = '';
                         if (isIncoming) amountPrefix = '+';
                         else if (isOutgoing) amountPrefix = '-';
@@ -390,7 +376,6 @@ export default function GamePage() {
                 </div>
             </div>
 
-            {/* Modal - modalConfig varsa render et */}
             {modalConfig && (
                 <TransactionModal
                     game={currentGame}
@@ -400,7 +385,6 @@ export default function GamePage() {
                 />
             )}
 
-            {/* Oyun Bitişi Modalı */}
             {showGameEndModal && currentGame?.winner_id && (
                 <GameEndModal
                     game={currentGame}

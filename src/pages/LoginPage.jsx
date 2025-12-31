@@ -24,7 +24,6 @@ export default function LoginPage() {
         const result = await signInAnonymously();
 
         if (result.success) {
-            // State güncellemesini bekle
             await new Promise(resolve => setTimeout(resolve, 100));
             navigate('/set-username', { state: { from: location.state?.from } });
         } else {

@@ -1,85 +1,87 @@
 # 🏦 Monopoly Digital Bank
 
-> **Monopoly Digital Bank** (eski adıyla Monopoly Mobile Banking), Monopoly masa oyunu için geliştirilmiş, gerçek zamanlı ve modern bir **dijital bankacılık** uygulamasıdır. Kağıt paraları unutun, **Monopoly Mobil Bankacılık** deneyimiyle işlemlerinizi cebinizden yönetin!
+> 🇹🇷 Türkçe dokümantasyon için [buraya tıklayın](README.tr.md).
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg?style=flat&logo=git)
+> **Monopoly Digital Bank** (formerly Monopoly Mobile Banking) is a modern, real-time **digital banking** application developed for the Monopoly board game. Forget paper money, manage your transactions from your pocket with the **Monopoly Mobile Banking** experience!
+
+![Version](https://img.shields.io/badge/version-1.0.2-blue.svg?style=flat&logo=git)
 ![License](https://img.shields.io/badge/license-MIT-green.svg?style=flat)
 ![React](https://img.shields.io/badge/React-19-61dafb.svg?style=flat&logo=react&logoColor=black)
 ![Vite](https://img.shields.io/badge/Vite-Build-646CFF?style=flat&logo=vite&logoColor=white)
 ![Supabase](https://img.shields.io/badge/Supabase-Backend-3ecf8e.svg?style=flat&logo=supabase&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-Deployed-000000.svg?style=flat&logo=vercel&logoColor=white)
 
-## 🌟 Proje Hakkında
+## 🌟 About The Project
 
-**Monopoly Digital Bank**, klasik Monopoly oyunundaki kağıt para karmaşasını ortadan kaldıran, oyuncuların birbirlerine veya bankaya saniyeler içinde para transferi yapabilmesini sağlayan ücretsiz bir web uygulamasıdır. Hem **Monopoly Mobile Bank** özelliklerini taşır hem de modern arayüzüyle eşsiz bir oyun keyfi sunar.
+**Monopoly Digital Bank** is a free web application that eliminates the clutter of paper money in the classic Monopoly game, allowing players to transfer money to each other or the bank in seconds. It carries the features of **Monopoly Mobile Bank** while offering a unique gaming pleasure with its modern interface.
 
-Supabase altyapısı sayesinde tüm işlemler **gerçek zamanlı (Realtime)** olarak senkronize edilir. Bir oyuncu para gönderdiğinde, karşı tarafın bakiyesi anında güncellenir. İster **Monopoly Dijital Bankacılık** deyin isterseniz elektronik banka, oyununuz artık çok daha hızlı!
+Thanks to the Supabase infrastructure, all transactions are synchronized in **Realtime**. When a player sends money, the other party's balance is updated instantly. Whether you call it Monopoly Digital Banking or electronic bank, your game is now much faster!
 
-## ✨ Temel Özellikler
+## ✨ Key Features
 
-- **⚡ Gerçek Zamanlı Bankacılık:** Yapılan transferler tüm oyuncuların ekranına anlık olarak yansır.
-- **🎮 Oyun Yönetimi:** Yeni oyun kurma, kod ile oyuna katılma ve lobi sistemi.
-- **💸 Kolay Transfer:** Oyuncular arası, bankadan oyuncuya veya oyuncudan bankaya hızlı transfer seçenekleri.
-- **🅿️ Otopark Havuzu:** Ortaya biriken paraları toplama ve yönetme mekanizması.
-- **📊 İstatistikler:** Kazanılan oyunlar, toplam oynama süresi ve detaylı işlem geçmişi.
-- **🔐 Güvenli Giriş:** E-posta ile kayıt veya Misafir (Anonim) giriş seçeneği.
-- **📱 Mobil Uyumlu:** Telefon ve tabletlerde kusursuz çalışan responsive tasarım.
+- **⚡ Real-Time Banking:** Transfers are instantly reflected on all players' screens.
+- **🎮 Game Management:** Create a new game, join via code, and lobby system.
+- **💸 Easy Transfer:** Fast transfer options between players, from bank to player, or player to bank.
+- **🅿️ Parking Pool:** Mechanism to collect and manage money accumulated in the middle (Free Parking).
+- **📊 Statistics:** Won games, total play time, and detailed transaction history.
+- **🔐 Secure Login:** Register with E-mail or Guest (Anonymous) login option.
+- **📱 Mobile Compatible:** Responsive design that works perfectly on phones and tablets.
 
-## 🛠️ Teknoloji Yığını
+## 🛠️ Tech Stack
 
 - **Frontend:** React 19, Vite
-- **Durum Yönetimi (State):** Zustand
-- **Backend & Veritabanı:** Supabase (PostgreSQL)
+- **State Management:** Zustand
+- **Backend & Database:** Supabase (PostgreSQL)
 - **Realtime:** Supabase Realtime Channels
-- **İkon Seti:** Lucide React
-- **Bildirimler:** React Hot Toast
-- **Stil:** Modern CSS Client & Variables
+- **Icons:** Lucide React
+- **Notifications:** React Hot Toast
+- **Style:** Modern CSS Client & Variables
 
-## 🚀 Kurulum ve Çalıştırma
+## 🚀 Installation & Setup
 
-Projeyi yerel ortamınızda çalıştırmak için aşağıdaki adımları izleyin:
+Follow these steps to run the project in your local environment:
 
-### 1. Projeyi Klonlayın
+### 1. Clone the Project
 ```bash
 git clone https://github.com/tnyligokhan/Monopoly-Digital-Bank.git
 cd Monopoly-Digital-Bank
 ```
 
-### 2. Bağımlılıkları Yükleyin
+### 2. Install Dependencies
 ```bash
 npm install
 ```
 
-### 3. Ortam Değişkenlerini Ayarlayın
-Ana dizinde `.env` dosyası oluşturun ve Supabase bilgilerinizi girin:
+### 3. Set Environment Variables
+Create a `.env` file in the root directory and enter your Supabase credentials:
 ```env
 VITE_SUPABASE_URL=your_supabase_project_url
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
 ```
 
-### 4. Veritabanını Hazırlayın
-Supabase panelinizde **SQL Editor** kısmına gidin ve projedeki `supabase-schema.sql` dosyasının içeriğini yapıştırıp çalıştırın. Bu işlem gerekli tabloları ve güvenlik politikalarını (RLS) oluşturacaktır.
+### 4. Prepare Database
+Go to the **SQL Editor** section in your Supabase panel and paste & run the content of the `supabase-schema.sql` file located in the project. This will create the necessary tables and security policies (RLS).
 
-### 5. Uygulamayı Başlatın
+### 5. Start the Application
 ```bash
 npm run dev
 ```
 
-## 📸 Ekran Görüntüleri
+## 📸 Screenshots
 
-_(Buraya uygulamanın ekran görüntülerini ekleyebilirsiniz)_
+_(You can add screenshots of the application here)_
 
-## 🤝 Katkıda Bulunma
+## 🤝 Contribution
 
-1. Bu repoyu Fork'layın
-2. Yeni bir feature branch oluşturun (`git checkout -b feature/yeni-ozellik`)
-3. Değişikliklerinizi commit edin (`git commit -m 'Yeni özellik eklendi'`)
-4. Branch'inizi Push edin (`git push origin feature/yeni-ozellik`)
-5. Bir Pull Request oluşturun
+1. Fork this repo
+2. Create a new feature branch (`git checkout -b feature/new-feature`)
+3. Commit your changes (`git commit -m 'Added new feature'`)
+4. Push to the Branch (`git push origin feature/new-feature`)
+5. Open a Pull Request
 
-## 📄 Lisans
+## 📄 License
 
-Bu proje [MIT](LICENSE) lisansı ile lisanslanmıştır.
+This project is licensed under the [MIT](LICENSE) license.
 
 ---
 Developed by **Gökhan Ton**

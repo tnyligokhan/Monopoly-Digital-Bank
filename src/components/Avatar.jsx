@@ -24,7 +24,6 @@ export default function Avatar({ user, size = 40, showBorder = false }) {
           alt={user.name || 'Avatar'}
           className="avatar-image"
           onError={(e) => {
-            // Resim yüklenemezse initials göster
             e.target.style.display = 'none';
             e.target.nextSibling.style.display = 'flex';
           }}

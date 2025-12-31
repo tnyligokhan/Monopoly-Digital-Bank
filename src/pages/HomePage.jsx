@@ -28,12 +28,9 @@ export default function HomePage() {
     });
 
     useEffect(() => {
-        // Eğer kullanıcı bir oyundaysa, oyun sayfasına yönlendir
         if (user?.current_game_id) {
             navigate(`/game/${user.current_game_id}`);
         }
-
-        // Son oyunları ve istatistikleri yükle
         if (user?.id) {
             loadRecentGames();
             loadUserStats();
@@ -55,13 +52,10 @@ export default function HomePage() {
     };
 
     const handleSignOut = async () => {
-        // Misafir kullanıcıysa onay iste
         if (user?.is_anonymous) {
             setShowSignOutConfirm(true);
             return;
         }
-
-        // Normal kullanıcı için direkt çıkış yap
         const result = await signOut();
         if (result.success) {
             navigate('/login');
@@ -120,12 +114,10 @@ export default function HomePage() {
 
     return (
         <div className="home-page">
-            {/* Sidebar Overlay */}
             {showSidebar && (
                 <div className="sidebar-overlay" onClick={() => setShowSidebar(false)}></div>
             )}
 
-            {/* Sidebar */}
             <div className={`sidebar ${showSidebar ? 'open' : ''}`}>
                 <div className="sidebar-header">
                     <button className="sidebar-close" onClick={() => setShowSidebar(false)}>
@@ -182,12 +174,12 @@ export default function HomePage() {
 
             <div className="container">
                 <div className="home-content fade-in">
-                    {/* Karşılama Mesajı */}
+
                     <div className="welcome-section">
                         <h2 className="welcome-title">Merhaba, {user?.name}! 👋</h2>
                         <p className="welcome-subtitle">Yeni bir oyun başlatın veya mevcut bir oyuna katılın</p>
                     </div>
-                    {/* İstatistikler */}
+
                     <div className="stats-grid">
                         <div className="stat-card">
                             <div className="stat-icon">
@@ -220,7 +212,6 @@ export default function HomePage() {
                         </div>
                     </div>
 
-                    {/* Oyun Butonları */}
                     <div className="game-actions">
                         <button
                             className="btn btn-primary btn-large game-action-btn"
@@ -245,7 +236,6 @@ export default function HomePage() {
                         </button>
                     </div>
 
-                    {/* Son Oyunlar */}
                     {recentGames && recentGames.length > 0 && (
                         <div className="recent-games">
                             <h2 className="section-title">Son Oyunlar</h2>
@@ -298,7 +288,6 @@ export default function HomePage() {
                 <AboutModal onClose={() => setShowAboutModal(false)} />
             )}
 
-            {/* Misafir Çıkış Onay Modalı */}
             {showSignOutConfirm && (
                 <div className="modal-overlay" onClick={() => setShowSignOutConfirm(false)}>
                     <div className="modal-content" onClick={(e) => e.stopPropagation()}>

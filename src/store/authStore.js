@@ -26,7 +26,6 @@ export const useAuthStore = create((set, get) => ({
                 set({ user: null, session: null, loading: false });
             }
 
-            // Auth değişikliklerini dinle
             supabase.auth.onAuthStateChange(async (event, session) => {
                 if (session?.user) {
                     const { data: userData } = await supabase
@@ -49,7 +48,7 @@ export const useAuthStore = create((set, get) => ({
     signInAnonymously: async () => {
         try {
             const { data, error } = await supabase.auth.signInAnonymously();
-            
+
             if (error) {
                 console.error('Supabase anonymous sign in error:', error);
                 throw error;
@@ -59,10 +58,8 @@ export const useAuthStore = create((set, get) => ({
                 throw new Error('Kullanıcı oluşturulamadı');
             }
 
-            // DiceBear avatar URL'i oluştur - Bottts Neutral style
             const avatarUrl = `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${data.user.id}`;
 
-            // Kullanıcı kaydı oluştur
             const { error: insertError } = await supabase
                 .from('users')
                 .insert({
@@ -74,12 +71,11 @@ export const useAuthStore = create((set, get) => ({
                     is_anonymous: true
                 });
 
-            if (insertError && insertError.code !== '23505') { // Duplicate key hatası değilse
+            if (insertError && insertError.code !== '23505') {
                 console.error('User insert error:', insertError);
                 throw insertError;
             }
 
-            // Kullanıcı bilgisini hemen getir ve state'i güncelle
             const { data: userData } = await supabase
                 .from('users')
                 .select('*')
@@ -109,9 +105,7 @@ export const useAuthStore = create((set, get) => ({
 
             if (error) throw error;
 
-            // Kullanıcı kaydı oluştur
             if (data.user) {
-                // DiceBear avatar URL'i oluştur - Bottts Neutral style
                 const avatarUrl = `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${data.user.id}`;
 
                 const { error: insertError } = await supabase
@@ -129,7 +123,6 @@ export const useAuthStore = create((set, get) => ({
                     throw insertError;
                 }
 
-                // Username kaydı oluştur
                 await supabase
                     .from('usernames')
                     .upsert({
@@ -156,7 +149,6 @@ export const useAuthStore = create((set, get) => ({
 
             if (error) throw error;
 
-            // Kullanıcı bilgisini getir
             const { data: userData } = await supabase
                 .from('users')
                 .select('*')
@@ -175,11 +167,9 @@ export const useAuthStore = create((set, get) => ({
         try {
             const user = get().user;
 
-            // Önce auth'dan çıkış yap
             const { error: signOutError } = await supabase.auth.signOut();
             if (signOutError) throw signOutError;
 
-            // Anonim kullanıcıysa veritabanından sil
             if (user && user.is_anonymous) {
                 await supabase.from('users').delete().eq('id', user.id);
             }
@@ -197,11 +187,6 @@ export const useAuthStore = create((set, get) => ({
             const user = get().user;
             if (!user) throw new Error('Kullanıcı bulunamadı');
 
-            // Kullanıcı adını direkt kaydet - benzersizlik kontrolü yok
-            // Çünkü aynı isimde birden fazla kullanıcı olabilir
-            // Benzersizlik user_id ile sağlanır
-            
-            // Eski username kaydını sil (eğer varsa)
             if (user.name) {
                 await supabase
                     .from('usernames')
@@ -209,19 +194,17 @@ export const useAuthStore = create((set, get) => ({
                     .eq('user_id', user.id);
             }
 
-            // Yeni kullanıcı adını kaydet (user_id benzersiz olduğu için sorun yok)
             const { error: usernameError } = await supabase
                 .from('usernames')
-                .upsert({ 
-                    username: username.toLowerCase(), 
-                    user_id: user.id 
+                .upsert({
+                    username: username.toLowerCase(),
+                    user_id: user.id
                 }, {
                     onConflict: 'user_id'
                 });
 
             if (usernameError) throw usernameError;
 
-            // Kullanıcı bilgisini güncelle
             const { data: updatedUser, error } = await supabase
                 .from('users')
                 .update({ name: username })

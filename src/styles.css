@@ -5,12 +5,10 @@
 
 /* CSS Variables - Design Tokens */
 :root {
-  /* Colors - Monopoly Brand Style */
   --primary: #F63919;
   --primary-hover: #d63316;
   --primary-light: #fa7a61;
 
-  /* FIXED Button Colors - Always Red/White independent of theme */
   --btn-primary-bg: #F63919;
   --btn-primary-text: #ffffff;
   --btn-primary-hover: #d63316;
@@ -56,7 +54,7 @@
   --transition: all 0.15s ease;
 }
 
-/* Dark Mode - Brand Optimized */
+/* Dark Mode */
 @media (prefers-color-scheme: dark) {
   :root {
     --primary: #F63919;
@@ -564,7 +562,6 @@ input[type="checkbox"] {
   width: 100%;
 }
 
-/* ... existing code ... */
 .login-logo {
   display: flex;
   justify-content: center;
@@ -576,7 +573,6 @@ input[type="checkbox"] {
   max-width: 100%;
   height: auto;
   max-height: 100px;
-  /* Limit height */
   object-fit: contain;
 }
 
@@ -612,11 +608,8 @@ input[type="checkbox"] {
   }
 }
 
-/* ... Clean up old classes if you wish, or leave them for safety ... */
-/* .logo-circle, .logo-text, .logo-small styles can be removed or ignored */
 
 .login-title {
-  /* ... */
   font-size: 1.75rem;
   font-weight: 700;
   color: var(--text-primary);

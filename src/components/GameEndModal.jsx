@@ -9,7 +9,6 @@ export default function GameEndModal({ game, currentPlayer, winner, onClose, onL
     const isWinner = winner.user_id === currentPlayer.user_id;
 
     useEffect(() => {
-        // Konfeti efekti - sadece kazanan için
         if (isWinner) {
             const duration = 3000;
             const end = Date.now() + duration;
@@ -41,16 +40,15 @@ export default function GameEndModal({ game, currentPlayer, winner, onClose, onL
 
     const gameDuration = () => {
         if (!game.starting_timestamp) return '0sn';
-        
-        // Eğer ending_timestamp varsa onu kullan, yoksa şu anki zamanı kullan
+
         const start = new Date(game.starting_timestamp);
         const end = game.ending_timestamp ? new Date(game.ending_timestamp) : new Date();
         const diffMs = end - start;
-        
+
         const hours = Math.floor(diffMs / 3600000);
         const minutes = Math.floor((diffMs % 3600000) / 60000);
         const seconds = Math.floor((diffMs % 60000) / 1000);
-        
+
         if (hours > 0) {
             return `${hours}sa ${minutes}dk`;
         } else if (minutes > 0) {
@@ -61,15 +59,15 @@ export default function GameEndModal({ game, currentPlayer, winner, onClose, onL
 
     const bankruptMessage = () => {
         if (!currentPlayer.bankrupt_timestamp || !game.starting_timestamp) return null;
-        
+
         const bankruptTime = new Date(currentPlayer.bankrupt_timestamp);
         const start = new Date(game.starting_timestamp);
         const diffMs = bankruptTime - start;
-        
+
         const hours = Math.floor(diffMs / 3600000);
         const minutes = Math.floor((diffMs % 3600000) / 60000);
         const seconds = Math.floor((diffMs % 60000) / 1000);
-        
+
         if (hours > 0) {
             return `${hours}sa ${minutes}dk sonra iflas`;
         } else if (minutes > 0) {
@@ -79,7 +77,7 @@ export default function GameEndModal({ game, currentPlayer, winner, onClose, onL
     };
 
     const handleShare = async () => {
-        const message = isWinner 
+        const message = isWinner
             ? `🏆 Monopoly oyununda kazandım! Oyun süresi: ${gameDuration()}`
             : `🎮 Monopoly oynadım! ${winner.name} kazandı. Oyun süresi: ${gameDuration()}`;
 
@@ -99,7 +97,6 @@ export default function GameEndModal({ game, currentPlayer, winner, onClose, onL
     };
 
     const handleGoHome = async () => {
-        // Önce oyundan ayrıl
         const result = await onLeaveGame();
         if (result.success) {
             onClose();
