@@ -14,6 +14,9 @@ const AVATAR_COLORS = [
   '#FFAAA5', // Pembe
 ];
 
+const EYES = ['bulging', 'dizzy', 'eva', 'frame1', 'frame2', 'glow', 'happy', 'hearts', 'robocop', 'round', 'roundFrame01', 'roundFrame02', 'sensor', 'shade01'];
+const MOUTHS = ['bite', 'diagram', 'grill01', 'grill02', 'grill03', 'smile01', 'smile02', 'square01', 'square02'];
+
 /**
  * Kullanıcı ID'sine göre avatar URL'i oluşturur
  * @param {string} userId - Kullanıcı ID'si
@@ -22,7 +25,12 @@ const AVATAR_COLORS = [
  */
 export function getAvatarUrl(userId, size = 80) {
   if (!userId) return null;
-  return `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${userId}&size=${size}`;
+
+  const eyes = EYES.join(',');
+  const mouths = MOUTHS.join(',');
+  const colors = AVATAR_COLORS.map(c => c.replace('#', '')).join(',');
+
+  return `https://api.dicebear.com/7.x/bottts-neutral/svg?seed=${userId}&size=${size}&backgroundColor=${colors}&backgroundType=solid&eyes=${eyes}&mouth=${mouths}`;
 }
 
 /**
@@ -32,13 +40,13 @@ export function getAvatarUrl(userId, size = 80) {
  */
 export function getAvatarColor(userId) {
   if (!userId) return AVATAR_COLORS[0];
-  
+
   // User ID'den sayısal bir değer üret
   let hash = 0;
   for (let i = 0; i < userId.length; i++) {
     hash = userId.charCodeAt(i) + ((hash << 5) - hash);
   }
-  
+
   // Hash'i renk paletine map et
   const index = Math.abs(hash) % AVATAR_COLORS.length;
   return AVATAR_COLORS[index];
@@ -51,7 +59,7 @@ export function getAvatarColor(userId) {
  */
 export function getInitials(name) {
   if (!name) return '?';
-  
+
   const parts = name.trim().split(' ');
   if (parts.length >= 2) {
     return (parts[0][0] + parts[1][0]).toUpperCase();

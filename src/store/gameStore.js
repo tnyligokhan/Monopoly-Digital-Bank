@@ -477,6 +477,28 @@ export const useGameStore = create((set, get) => ({
     },
 
     /**
+     * Oyunu tamamen siler ve herkesi atar. (Sadece kurucu)
+     */
+    disbandGame: async (gameId) => {
+        try {
+            const { error } = await supabase
+                .from('games')
+                .delete()
+                .eq('id', gameId);
+
+            if (error) throw error;
+
+            // Store'u temizle
+            get().cleanup();
+
+            return { success: true };
+        } catch (error) {
+            console.error('Disband game error:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
+    /**
      * Store temizliği yapar ve realtime bağlantısını keser.
      */
     cleanup: () => {

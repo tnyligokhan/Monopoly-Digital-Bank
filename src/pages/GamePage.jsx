@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../store/authStore';
 import { useGameStore } from '../store/gameStore';
-import { LogOut, Share2, Upload, Download, Building2, Wallet, Car, User, Clock, ArrowLeft, Trash2 } from 'lucide-react';
+import { LogOut, Share2, Upload, Download, Building2, Wallet, Car, User, Clock, ArrowLeft, Trash2, XCircle } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import toast from 'react-hot-toast';
 import TransactionModal from '../components/TransactionModal';
@@ -18,12 +18,13 @@ export default function GamePage() {
     const { gameId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuthStore();
-    const { currentGame, subscribeToGame, leaveGame, startGame, joinGame, cleanup, makeTransaction, kickPlayer } = useGameStore();
+    const { currentGame, subscribeToGame, leaveGame, startGame, joinGame, cleanup, makeTransaction, kickPlayer, disbandGame } = useGameStore();
 
     // UI States
     const [modalConfig, setModalConfig] = useState(null);
     const [showGameEndModal, setShowGameEndModal] = useState(false);
     const [hasTriedJoining, setHasTriedJoining] = useState(false);
+    const [gameLoaded, setGameLoaded] = useState(false);
 
     /**
      * Sayfa yüklendiğinde oyun kanalına abone olur.
@@ -81,6 +82,18 @@ export default function GamePage() {
     }, [currentGame, user, gameId, hasTriedJoining]);
 
     /**
+     * Oyun silindiğinde ana sayfaya yönlendir.
+     */
+    useEffect(() => {
+        if (currentGame) {
+            setGameLoaded(true);
+        } else if (gameLoaded && !currentGame) {
+            toast.error('Oyun kurucu tarafından sonlandırıldı');
+            navigate('/');
+        }
+    }, [currentGame, gameLoaded]);
+
+    /**
      * Kazanan belirlendiğinde oyun sonu modalını açar.
      */
     useEffect(() => {
@@ -97,6 +110,21 @@ export default function GamePage() {
             const result = await leaveGame(user.id);
             if (result.success) {
                 navigate('/');
+            }
+        }
+    };
+
+    /**
+     * Oyunu ve lobiyi tamamen dağıtma (Sadece Kurucu).
+     */
+    const handleDisbandGame = async () => {
+        if (confirm('DİKKAT: Oyunu tamamen bitirmek ve herkesi atmak istediğinize emin misiniz?')) {
+            const result = await disbandGame(gameId);
+            if (result.success) {
+                toast.success('Oyun dağıtıldı');
+                navigate('/');
+            } else {
+                toast.error(result.error);
             }
         }
     };
@@ -189,6 +217,21 @@ export default function GamePage() {
     if (!hasStarted || currentGame.players.length < 2) {
         return (
             <div className="game-page">
+                <header className="game-header">
+                    <div className="game-header-left">
+                        <button className="icon-btn" onClick={() => navigate('/')}><ArrowLeft size={24} /></button>
+                        <span className="game-code">#{gameId}</span>
+                    </div>
+                    {isCreator ? (
+                        <button className="icon-btn" onClick={handleDisbandGame} style={{ color: 'var(--danger)' }} title="Oyunu Dağıt">
+                            <XCircle size={24} />
+                        </button>
+                    ) : (
+                        <button className="icon-btn" onClick={handleLeaveGame} title="Ayrıl">
+                            <LogOut size={24} />
+                        </button>
+                    )}
+                </header>
                 <div className="container" style={{ paddingTop: 'var(--spacing-2xl)' }}>
                     <div className="lobby-card fade-in">
                         <h2 className="text-center mb-4">Lobi: #{gameId}</h2>
@@ -241,7 +284,15 @@ export default function GamePage() {
                     <button className="icon-btn" onClick={() => navigate('/')}><ArrowLeft size={24} /></button>
                     <span className="game-code">#{gameId}</span>
                 </div>
-                <button className="icon-btn" onClick={handleLeaveGame}><LogOut size={24} /></button>
+                {isCreator ? (
+                    <button className="icon-btn" onClick={handleDisbandGame} style={{ color: 'var(--danger)' }} title="Oyunu Bitir">
+                        <XCircle size={24} />
+                    </button>
+                ) : (
+                    <button className="icon-btn" onClick={handleLeaveGame} title="Ayrıl">
+                        <LogOut size={24} />
+                    </button>
+                )}
             </header>
 
             {/* Bakiye Gösterimi */}
